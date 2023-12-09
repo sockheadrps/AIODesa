@@ -10,8 +10,10 @@ python = "^3.10"
 aiosqlite = "^0.19.0"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
+pytest = "^7.0"
 pre-commit = "^3.5.0"
+mypy = "^1.7.1"
+pytest-asyncio = "^0.23.2"
 
 
 [build-system]
