@@ -1,0 +1,6 @@
+/dev
+*.sqlite3
+.venv
+run.py
+__pycache__/
+*.pyc
