@@ -1,7 +1,7 @@
 from dataclasses import is_dataclass, fields
 from pathlib import Path
 import aiosqlite
-from utils.schema import make_schema
+from .utils.schema import make_schema
 import inspect
 import importlib
 
