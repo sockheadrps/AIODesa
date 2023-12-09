@@ -4,3 +4,5 @@
 run.py
 __pycache__/
 *.pyc
+package_upload.txt
+/dist
