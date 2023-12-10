@@ -37,11 +37,11 @@ def make_schema(name: str, data_cls: Any) -> TableSchema:
     """
     columns = []
     name = name.replace(" ", "_")
-    for field_name, field_type in data_cls.__annotations__.items():
+    for field_name, value in data_cls.__annotations__.items():
         if field_name == "table_name":
             pass
         else:
-            sql_type = "INTEGER" if field_type == int else "VARCHAR(255)"
+            sql_type = "INTEGER" if value == int else "VARCHAR(255)"
             columns.append(f"{field_name} {sql_type}")
 
     schema = TableSchema(

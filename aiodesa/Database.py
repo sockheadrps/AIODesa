@@ -2,7 +2,7 @@ from dataclasses import is_dataclass, fields
 from typing import Union, Tuple, Type, Optional
 from pathlib import Path
 import aiosqlite
-from aiodesa.utils.schema import make_schema, TableSchema
+from aiodesa.utils.tables import make_schema, TableSchema
 import inspect
 import importlib
 import os
@@ -15,33 +15,33 @@ class Db:
     Parameters
     ----------
     db_path : str
-        The path to the SQLite database file.
+            The path to the SQLite database file.
 
     Attributes
     ----------
     db_path : pathlib.Path
-        The path to the SQLite database file.
+            The path to the SQLite database file.
     conn : aiosqlite.Connection or None
-        The SQLite database connection object. Initialized as None until the database is connected.
+            The SQLite database connection object. Initialized as None until the database is connected.
 
     Methods
     -------
     _create_db()
-        Internal method to create the database file if it does not exist.
+            Internal method to create the database file if it does not exist.
     read_table_schemas(schema)
-        Read table schemas and create tables in the database based on the provided schema.
+            Read table schemas and create tables in the database based on the provided schema.
     table_exists(table_name)
-        Check if a table with the specified name exists in the database.
+            Check if a table with the specified name exists in the database.
     create_table(named_data, name)
-        Create a table in the database based on the provided TableSchema instance.
+            Create a table in the database based on the provided TableSchema instance.
     connect()
-        Establish a connection to the SQLite database.
+            Establish a connection to the SQLite database.
     close()
-        Close the connection to the SQLite database.
+            Close the connection to the SQLite database.
     __aenter__()
-        Async context manager entry point to automatically connect to the database.
+            Async context manager entry point to automatically connect to the database.
     __aexit__(exc_type, exc_value, traceback)
-        Async context manager exit point to automatically close the database connection.
+            Async context manager exit point to automatically close the database connection.
     """
 
     def __init__(self, db_path: str) -> None:
@@ -69,8 +69,8 @@ class Db:
         Parameters
         ----------
         schema : Union[type, Tuple[type, ...], str]
-            The schema definition, which can be a single dataclass, a tuple of dataclasses,
-            or the path to a .py file containing dataclass objects.
+                The schema definition, which can be a single dataclass, a tuple of dataclasses,
+                or the path to a .py file containing dataclass objects.
         """
 
         # single dataclass
@@ -92,7 +92,7 @@ class Db:
                         await self.create_table(schema_, field.name)
             return
 
-        # .py file of dataclass objects
+        # Load all the classes in the mydata.py file
         try:
             schemas_path = Path(__file__).parent / schema
 
@@ -128,12 +128,12 @@ class Db:
         Parameters
         ----------
         table_name : str
-            The name of the table to check.
+                The name of the table to check.
 
         Returns
         -------
         Optional[bool]
-            True if the table exists, False otherwise.
+                True if the table exists, False otherwise.
         """
         if self.conn is not None:
             query = f"SELECT name FROM sqlite_master WHERE type='table' AND name=?;"
@@ -149,15 +149,31 @@ class Db:
         Parameters
         ----------
         named_data : TableSchema
-            The TableSchema instance containing the table_name and SQL data definition.
+                The TableSchema instance containing the table_name and SQL data definition.
         name : str
-            The name of the table.
+                The name of the table.
         """
         if self.conn is not None:
             if not await self.table_exists(name):
                 async with self.conn.executescript(named_data.data) as cursor:
                     await cursor.fetchall()
                 await self.conn.commit()
+
+    async def insert_into(self, table_name, user):
+        field_names = [field for field in user.__annotations__]
+        values = [getattr(user, i) for i in field_names if getattr(user, i) is not None]
+        non_none_columns = [
+            (field, value)
+            for field, value in zip(field_names, values)
+            if value is not None
+        ]
+        columns, filtered_values = zip(*non_none_columns)
+        columns_str = ", ".join(columns)
+        placeholders = ", ".join("?" for _ in filtered_values)
+        sql = f"INSERT INTO {table_name} ({columns_str}) VALUES ({placeholders});"
+
+        await self.conn.execute(sql, values)
+        await self.conn.commit()
 
     async def connect(self) -> None:
         """
@@ -179,7 +195,7 @@ class Db:
         Returns
         -------
         Db
-            The Db instance with an active database connection.
+                The Db instance with an active database connection.
         """
         await self.connect()
         return self
