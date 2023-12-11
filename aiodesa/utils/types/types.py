@@ -1,5 +1,4 @@
 from enum import Enum
-from enum import Enum
 import builtins
 from typing import ClassVar, Dict, Protocol, Any
 from types import UnionType

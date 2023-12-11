@@ -1,12 +1,9 @@
 from dataclasses import is_dataclass, fields
-from typing import Union, Tuple, Type, Callable, Any
+from typing import Tuple, Callable, Any
 from pathlib import Path
 import aiosqlite
 from aiodesa.utils.tables import make_schema, TableSchema
 from aiodesa.utils.types import IsDataclass
-import inspect
-import importlib
-import os
 
 
 class Db:
