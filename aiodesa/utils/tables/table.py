@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from collections import namedtuple
 from typing import Tuple, Any, NamedTuple
 from aiodesa.utils.types import py_to_sql_type
 
