@@ -1,14 +1,13 @@
 # Asyncio Dead Easy Sql API
 
-## AIODesa is for simple data access and definition for your python projects
+## AIODesa is the solution to data definition, acess and management for the popular file-based relational dabase, SQLite. 
 
-### AIODesa simplifies async SQLite database management for your projects. It provides a convenient wrapper around Asiosqlite, allowing easy definition of table and record schemas using Python's dataclasses. Define SQL tables and records effortlessly with AIODesa using a single data class, a tuple of data classes, or a .py file with dataclasses.
+### AIODesa is __simple__ and it achieves this by providing a 100% python interface for driving your aschronous data access. Easy definition of table and record schemas exclusivly leveraging pythons builtins and standardlib to wrap around AioSqlite. Define and access SQL tables and records effortlessly with AIODesa using a single data class as an abstraction that does away with the need to wrire even a single line of SQL code. 
 
 AIODesa aims to make defining SQL tables and records easy by utilizing dataclasses to define schemas of tables and records. Table and record schemas can be defined with:
 1. a single data class
 2. a tuple of data classes
-3. a .py file with dataclasses.
-<br>
+
 
 # Usage
 
