@@ -1,13 +1,18 @@
 # Asyncio Dead Easy Sql API
 
-## AIODesa is the solution to data definition, acess and management for the popular file-based relational dabase, SQLite. 
+## Are you tired of re-writing SQLite DB's for your projects? Me too. AIODesa makes standing up simple, usable applications extremely easy and effective.
 
-### AIODesa is __simple__ and it achieves this by providing a 100% python interface for driving your aschronous data access. Easy definition of table and record schemas exclusivly leveraging pythons builtins and standardlib to wrap around AioSqlite. Define and access SQL tables and records effortlessly with AIODesa using a single data class as an abstraction that does away with the need to wrire even a single line of SQL code. 
+### AIODesa offers a straightforward and 100% Python interface for managing asynchronous data access. By leveraging Python's built-ins and standard library, it seamlessly wraps around AioSqlite, providing a hassle-free experience. With AIODesa, you can define, generate, and commit data effortlessly, thanks to shared objects for tables and records.
 
-AIODesa aims to make defining SQL tables and records easy by utilizing dataclasses to define schemas of tables and records. Table and record schemas can be defined with:
-1. a single data class
-2. a tuple of data classes
+AIODesa aims to make defining SQL tables and records easy by utilizing dataclasses to define structure of both tables and records. No more re-writing schemas.
 
+## AioDesa
+
+![AIODesa](https://github.com/sockheadrps/AIODesa/blob/main/AIODesaEx.png?raw=true)
+
+## AIOSqlite
+
+![AIOSqlite](https://github.com/sockheadrps/AIODesa/blob/main/AIOSqliteEx.png?raw=true)
 
 # Usage
 
@@ -15,32 +20,6 @@ __Install via pip__
 ```
 pip install aiodesa
 ```
-
-For example, define your table schemas in a seperate file.  
-__schemas.py__
-
-![schema file](https://github.com/sockheadrps/AIODesa/blob/main/schemafile.png?raw=true)
-
-Import db from the package and run with asyncio
-
-__main.py__
-
-```
-from aiodesa import Db
-import asyncio
-
-
-async def main():
-	schema_file = "table_schemas.py"
-	path_to_generate_db = "database.sqlite3"
-	async with Db(path_to_generate_db) as db:
-		await db.read_table_schemas(schema_file)
-
-asyncio.run(main())
-```
-
-Tables are automatically generated
-![sql file](https://github.com/sockheadrps/AIODesa/blob/main/sql.png?raw=true)
 
 <br>
 
@@ -69,22 +48,38 @@ poetry run python main.py
 Sample API usage:
 
 ```
-from dataclasses import dataclass
 from Database import Db
 import asyncio
+from dataclasses import dataclass
+from aiodesa.utils.tables import ForeignKey, UniqueKey, PrimaryKey, set_key
 
 
 async def main():
+	# Define structure for both tables and records
+	# Easily define key types
 	@dataclass
-	class Table:
+	@set_key(PrimaryKey("username"), UniqueKey("id"), ForeignKey("username", "anothertable"))
+	class UserEcon:
 		username: str
-		credits: int
-		table_name: str = "table 1"
+		credits: int | None = None
+		points: int | None = None
+		id: str | None = None
+		table_name: str = "user_economy"
 
-	schema = Table
 
 	async with Db("database.sqlite3") as db:
-		await db.read_table_schemas(schema)
+		# Create table from UserEcon class
+		await db.read_table_schemas(UserEcon)
+
+		# Insert a record
+		record = db.insert(UserEcon.table_name)
+		await record('sockheadrps', id="fffff")
+
+		# Update a record
+		record = db.update(UserEcon.table_name, column_identifier="username")
+		await record('sockheadrps', points=2330, id="1234")
+		
 
 asyncio.run(main())
+
 ```

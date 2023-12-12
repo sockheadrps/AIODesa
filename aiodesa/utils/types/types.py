@@ -5,6 +5,27 @@ from types import UnionType
 
 
 class SQLDataType(Enum):
+    """
+    Enumeration representing common SQL data types.
+
+    Values:
+    - INT: Integer type
+    - VARCHAR: Variable character type
+    - CHAR: Character type
+    - TEXT: Text type
+    - BOOLEAN: Boolean type
+    - FLOAT: Floating-point type
+    - DATE: Date type
+    - DATETIME: Datetime type
+    - DECIMAL: Decimal type
+    - DOUBLE: Double precision floating-point type
+    - INTEGER: Integer type
+    - SMALLINT: Small integer type
+    - BIGINT: Big integer type
+    - PRIMARY: Primary key constraint
+    - UNIQUE: Unique constraint
+    """
+
     INT = "INT"
     VARCHAR = "VARCHAR"
     CHAR = "CHAR"
@@ -23,6 +44,24 @@ class SQLDataType(Enum):
 
 
 def py_to_sql_type(data: Any) -> str:
+    """
+    Convert a Python data type to its corresponding SQL data type.
+
+    Parameters:
+    - data (Any): The Python data type.
+
+    Returns:
+    - str: The corresponding SQL data type.
+
+    Raises:
+    - ValueError: If the data type is not supported.
+
+    Example:
+    ```python
+    sql_type = py_to_sql_type(str)
+    print(sql_type)  # Output: "VARCHAR"
+    ```
+    """
     if isinstance(data, UnionType):
         tmp = data.__args__
         if len(tmp) == 2:
@@ -51,4 +90,11 @@ def py_to_sql_type(data: Any) -> str:
 
 
 class IsDataclass(Protocol):
+    """
+    Protocol indicating that a class is a data class.
+
+    Attributes:
+    - __dataclass_fields__ (ClassVar[Dict]): A class variable representing the fields of a data class.
+    """
+
     __dataclass_fields__: ClassVar[Dict]

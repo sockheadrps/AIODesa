@@ -6,3 +6,4 @@ __pycache__/
 *.pyc
 package_upload.txt
 /dist
+runshit.py

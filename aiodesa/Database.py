@@ -4,6 +4,11 @@ from pathlib import Path
 import aiosqlite
 from aiodesa.utils.tables import make_schema, TableSchema
 from aiodesa.utils.types import IsDataclass
+from aiodesa.utils.records import (
+    get_field_names,
+    get_field_values,
+    get_non_none_columns,
+)
 
 
 class Db:
@@ -60,7 +65,9 @@ class Db:
         This method is automatically called during the initialization of the Db class.
         It ensures that the SQLite database file is created at the specified path if it does not exist.
         """
-
+        if self.db_path.exists():
+            self.db_path.unlink()
+            print(f"Database {self.db_path.name} deleted successfully.")
         if not self.db_path.exists():
             self.db_path.parent.mkdir(parents=True, exist_ok=True)
             self.db_path.touch()
@@ -135,41 +142,158 @@ class Db:
                     await cursor.fetchall()
                 await self.conn.commit()
 
-    def insert_into(self, table_name: str, update=False) -> Callable[..., None]:
-        async def record(*args, **kwargs) -> None:
-            data_cls = self.tables[table_name](*args, **kwargs)
-            field_names = [
-                field for field in data_cls.__annotations__ if field != "table_name"
-            ]
-            values = [
-                getattr(data_cls, i)
-                for i in field_names
-                if getattr(data_cls, i) is not None
-            ]
-            non_none_columns = [
-                (field, value)
-                for field, value in zip(field_names, values)
-                if value is not None
-            ]
-            columns, filtered_values = zip(*non_none_columns)
-            columns_str = ", ".join(columns)
-            placeholders = ", ".join("?" for _ in filtered_values)
-            if not update:
-                sql = (
-                    f"INSERT INTO {table_name} ({columns_str}) VALUES ({placeholders});"
-                )
-            else:
-                set_clause = ", ".join(f"{column} = ?" for column in columns)
-                sql = f"UPDATE {table_name} SET {set_clause};"
+    def insert(self, table_name: str) -> Callable[..., None]:
+        """
+        Create a record and insert it into the specified table.
 
-            await self.conn.execute(sql, values)
+        Parameters:
+        - table_name (str): The name of the table to insert the record into.
+
+        Returns:
+        - Callable[..., None]: A function to be called with the record data.
+
+        Example:
+        ```python
+        insert_user = your_database_instance.insert("users")
+        await insert_user(username="john_doe", email="john@example.com")
+        ```
+        """
+
+        async def record(*args: Any, **kwargs: Any) -> None:
+            """
+            Insert a record into the specified table.
+
+            Arguments:
+            - *args: Positional arguments representing the record data.
+            - **kwargs: Keyword arguments representing the record data.
+
+            Example:
+            ```python
+            await record(username="john_doe", email="john@example.com")
+            ```
+            """
+            data_cls = self.tables[table_name](*args, **kwargs)
+            field_vals = {}
+            for field in fields(data_cls):
+                value = getattr(data_cls, field.name)
+                if value is not None and value != data_cls.table_name:
+                    field_vals[field.name] = value
+
+            insertion_vals = tuple(field_vals.values())
+
+            columns_str = ", ".join(field_vals.keys())
+            placeholders = ", ".join("?" for _ in insertion_vals)
+            sql = f"INSERT INTO {table_name} ({columns_str}) VALUES ({placeholders});"
+            await self.conn.execute(sql, insertion_vals)
             await self.conn.commit()
 
         return record
 
-    def build_records(self, *data_classes: IsDataclass) -> None:
-        for data_cls in data_classes:
-            setattr(Db, data_cls.__name__, data_cls)
+    def update(self, table_name: str, column_identifier: str) -> Callable[..., None]:
+        """
+        Create a record update operation for the specified table.
+
+        Parameters:
+        - table_name (str): The name of the table to update records in.
+
+        Returns:
+        - Callable[..., None]: A function to be called with the record data for updating.
+
+        Example:
+        ```python
+        update_user = your_database_instance.update("users")
+        await update_user(username="john_doe", email="john@example.com")
+        ```
+        """
+
+        async def record(*args, **kwargs) -> None:
+            """
+            Update records in the specified table.
+
+            Arguments:
+            - *args: Positional arguments representing the record data.
+            - **kwargs: Keyword arguments representing the record data.
+
+            Example:
+            ```python
+            await record(username="john_doe", email="john@example.com")
+            ```
+            """
+            data_cls = self.tables[table_name](*args, **kwargs)
+            field_names = get_field_names(data_cls)
+            field_names.remove(column_identifier)
+            values = get_field_values(data_cls, field_names)
+            tup = (values[0], args[0])
+            non_none_columns = get_non_none_columns(field_names, values)
+            set_clauses_placeholders = []
+            for column in non_none_columns:
+                set_clause = f"{column[0]} = ?"
+                set_clauses_placeholders.append(set_clause)
+
+            set_clause_string = ", ".join(set_clauses_placeholders)
+
+            sql = f"UPDATE {table_name} SET {set_clause_string} WHERE username = ?"
+
+            await self.conn.execute(sql, tup)
+            await self.conn.commit()
+
+        return record
+
+    def update(self, table_name: str, column_identifier: str) -> Callable[..., None]:
+        """
+        Create a record update operation for the specified table.
+
+        Parameters:
+        - table_name (str): The name of the table to update records in.
+        - column_identifier (str): The column used to identify the record.
+
+        Returns:
+        - Callable[..., None]: A function to be called with the record data for updating.
+
+        Example:
+        ```python
+        update_user = your_database_instance.update("users", "username")
+        await update_user(username="john_doe", email="john@example.com")
+        ```
+        """
+
+        async def record(*args: Any, **kwargs: Any) -> None:
+            """
+            Update records in the specified table.
+
+            Arguments:
+            - *args: Positional arguments representing the record data.
+            - **kwargs: Keyword arguments representing the record data.
+
+            Example:
+            ```python
+            await record(username="john_doe", email="john@example.com")
+            ```
+            """
+            data_cls = self.tables[table_name](*args, **kwargs)
+
+            field_vals = {}
+            for field in fields(data_cls):
+                if field.name != column_identifier:
+                    value = getattr(data_cls, field.name)
+                    if value is not None and value != data_cls.table_name:
+                        field_vals[field.name] = value
+                else:
+                    # Always the value we're identifying on
+                    field_vals[field.name] = args[0]
+
+            record_identifier = field_vals[column_identifier]
+            del field_vals[column_identifier]
+            insertion_vals = tuple(field_vals.values()) + (record_identifier,)
+
+            set_clauses_placeholders = [f"{column} = ?" for column in field_vals.keys()]
+            set_clause_string = ", ".join(set_clauses_placeholders)
+
+            sql = f"UPDATE {table_name} SET {set_clause_string} WHERE {column_identifier} = ?"
+            await self.conn.execute(sql, insertion_vals)
+            await self.conn.commit()
+
+        return record
 
     async def connect(self) -> None:
         """

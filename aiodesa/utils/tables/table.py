@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Tuple, Any, NamedTuple
+from typing import Any, NamedTuple
 from aiodesa.utils.types import py_to_sql_type
 
 
@@ -63,87 +63,57 @@ class UniqueKey(NamedTuple):
     column: str
 
 
-def foreign_key(*foreign_keys: Tuple[str, str]):
-    """
-    Decorator to specify foreign keys for a database table.
+class UpdateRecord(NamedTuple):
+    column_name: str
+    value: Any
 
-    Args:
-        *foreign_keys (Tuple[str, str]): One or more tuples representing foreign key relationships.
-            Each tuple should contain two strings: the column name representing the foreign key
-            and the name of the referenced table.
+
+def set_key(*args: PrimaryKey | UniqueKey | ForeignKey | tuple[ForeignKey, ...]):
+    """
+    Decorator for setting primary keys, unique keys, and foreign keys on a class.
+
+    Parameters:
+    - *args (PrimaryKey | UniqueKey | ForeignKey | tuple[ForeignKey, ...]):
+        The keys to be set. Can include PrimaryKey, UniqueKey, ForeignKey, or a tuple of ForeignKeys.
 
     Returns:
-        Callable: A decorator function.
+    - Callable[[Type], Type]: A decorator function to set keys on a class.
 
-    Usage:
-        @foreign_key(('other_table', 'other_column'), ('another_table', 'another_column'))
-        @dataclass
-        class Table:
-            username: str
-            credits: int
-            points: int
-            table_name: str = "user_econ"
+    Example:
+    ```python
+    @YourClass.set_key(PrimaryKey("id"), UniqueKey("username"))
+    class YourModel:
+        # Class definition
+    ```
+
+    Note:
+    - When using tuples for ForeignKeys, make sure not to include PrimaryKey or UniqueKey instances within the tuple.
+    - Foreign keys can be specified individually or as a tuple.
+
     """
 
     def decorator(cls):
-        existing_foreign_keys = getattr(cls, "foreign_keys", ())
-        cls.foreign_keys: Tuple[Tuple[str, str], ...] = (
-            existing_foreign_keys + foreign_keys
-        )
-        return cls
+        for arg in args:
+            if isinstance(arg, PrimaryKey):
+                if not hasattr(cls, "primary_key"):
+                    cls.primary_key: str = arg.column
 
-    return decorator
+            elif isinstance(arg, UniqueKey):
+                if not hasattr(cls, "unique_key"):
+                    cls.unique_key: str = arg.column
 
+            elif isinstance(arg, tuple):
+                if not any(
+                    isinstance(existing_key, (PrimaryKey, UniqueKey))
+                    for existing_key in getattr(cls, "foreign_keys", ())
+                ):
+                    existing_foreign_keys = getattr(cls, "foreign_keys", ())
+                    cls.foreign_keys = existing_foreign_keys + (arg,)
 
-def primary_key(primary_key: str):
-    """
-    Decorator to specify primary key for a database table.
+            elif isinstance(arg, ForeignKey):
+                existing_foreign_keys = getattr(cls, "foreign_keys", ())
+                cls.foreign_keys = existing_foreign_keys + arg
 
-    Args:
-        primary_key (str): A string representing primary key column name.
-
-    Returns:
-        Callable: A decorator function.
-
-    Usage:
-        @primary_key('username')
-        @dataclass
-        class Table:
-            username: str
-            credits: int
-            points: int
-            table_name: str = "user_econ"
-    """
-
-    def decorator(cls):
-        cls.primary_key: str = primary_key
-        return cls
-
-    return decorator
-
-
-def unique_key(unique_key: str):
-    """
-    Decorator to specify unique key for a database table.
-
-    Args:
-        unique_key (str): A string representing unique key column name.
-
-    Returns:
-        Callable: A decorator function.
-
-    Usage:
-        @unique_key('username')
-        @dataclass
-        class Table:
-            username: str
-            credits: int
-            points: int
-            table_name: str = "user_econ"
-    """
-
-    def decorator(cls):
-        cls.unique_key: str = unique_key
         return cls
 
     return decorator
@@ -189,11 +159,10 @@ def make_schema(name: str, data_cls: Any) -> TableSchema:
             pass
         else:
             columns.append(f"{field_name} {py_to_sql_type(field_type)}")
-
-    if isinstance(data_cls.primary_key, PrimaryKey):
-        columns.append(f"PRIMARY KEY ({', '.join(data_cls.primary_key)})")
-    if isinstance(data_cls.primary_key, UniqueKey):
-        columns.append(f"UNIQUE KEY ({', '.join(data_cls.primary_key)})")
+    if hasattr(data_cls, "primary_key"):
+        columns.append(f"PRIMARY KEY ({data_cls.primary_key})")
+    if hasattr(data_cls, "unique_key"):
+        columns.append(f"UNIQUE ({data_cls.unique_key})")
 
     schema = TableSchema(
         name, f"CREATE TABLE IF NOT EXISTS {name} (\n{', '.join(columns)}\n);"
