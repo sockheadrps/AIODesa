@@ -48,7 +48,7 @@ poetry run python main.py
 Sample API usage:
 
 ```
-from Database import Db
+from aiodesa import Db
 import asyncio
 from dataclasses import dataclass
 from aiodesa.utils.tables import ForeignKey, UniqueKey, PrimaryKey, set_key

@@ -65,9 +65,6 @@ class Db:
         This method is automatically called during the initialization of the Db class.
         It ensures that the SQLite database file is created at the specified path if it does not exist.
         """
-        if self.db_path.exists():
-            self.db_path.unlink()
-            print(f"Database {self.db_path.name} deleted successfully.")
         if not self.db_path.exists():
             self.db_path.parent.mkdir(parents=True, exist_ok=True)
             self.db_path.touch()
