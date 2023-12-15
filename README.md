@@ -10,39 +10,11 @@ AIODesa aims to make defining SQL tables and records easy by utilizing dataclass
 
 ![AIODesa](https://github.com/sockheadrps/AIODesa/blob/main/AIODesaEx.png?raw=true)
 
-## AIOSqlite
-
-![AIOSqlite](https://github.com/sockheadrps/AIODesa/blob/main/AIOSqliteEx.png?raw=true)
-
 # Usage
 
 __Install via pip__
 ```
 pip install aiodesa
-```
-
-<br>
-
-# Development:
-
-Ensure poetry is installed:
-
-```
-pip install poetry
-```
-
-Install project using poetry
-
-```
-poetry add git+https://github.com/sockheadrps/AIODesa.git
-poetry install
-```
-
-create a python file for using AIODesa and activate poetry virtual env to run it
-
-```
-poetry shell
-poetry run python main.py
 ```
 
 Sample API usage:
@@ -82,4 +54,28 @@ async def main():
 
 asyncio.run(main())
 
+```
+
+<br>
+
+# Development:
+
+Ensure poetry is installed:
+
+```
+pip install poetry
+```
+
+Install project using poetry
+
+```
+poetry add git+https://github.com/sockheadrps/AIODesa.git
+poetry install
+```
+
+create a python file for using AIODesa and activate poetry virtual env to run it
+
+```
+poetry shell
+poetry run python main.py
 ```
