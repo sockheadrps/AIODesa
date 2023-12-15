@@ -8,7 +8,7 @@ AIODesa aims to make defining SQL tables and records easy by utilizing dataclass
 
 ## AioDesa
 
-![AIODesa](https://github.com/sockheadrps/AIODesa/blob/main/AIODesaEx.png?raw=true)
+![AIODesa](https://github.com/sockheadrps/AIODesa/blob/main/AIODesaEx1.png?raw=true)
 
 # Usage
 
