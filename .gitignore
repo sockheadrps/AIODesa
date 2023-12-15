@@ -1,9 +1,9 @@
 /dev
 *.sqlite3
 .venv
-run.py
+_run.py
 __pycache__/
 *.pyc
 package_upload.txt
 /dist
-runshit.py
+_build/
