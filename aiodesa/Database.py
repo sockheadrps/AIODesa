@@ -4,11 +4,6 @@ from pathlib import Path
 import aiosqlite
 from aiodesa.utils.tables import make_schema, TableSchema
 from aiodesa.utils.types import IsDataclass
-from aiodesa.utils.records import (
-    get_field_names,
-    get_field_values,
-    get_non_none_columns,
-)
 
 
 class Db:
@@ -139,19 +134,19 @@ class Db:
                     await cursor.fetchall()
                 await self.conn.commit()
 
-    def insert(self, table_name: str) -> Callable[..., None]:
+    def insert(self, data_class: is_dataclass) -> Callable[..., None]:
         """
         Create a record and insert it into the specified table.
 
         Parameters:
-        - table_name (str): The name of the table to insert the record into.
+        - data_class (Type): The data class representing the table structure.
 
         Returns:
         - Callable[..., None]: A function to be called with the record data.
 
         Example:
         ```python
-        insert_user = your_database_instance.insert("users")
+        insert_user = your_database_instance.insert(User)
         await insert_user(username="john_doe", email="john@example.com")
         ```
         """
@@ -160,16 +155,17 @@ class Db:
             """
             Insert a record into the specified table.
 
+
             Arguments:
-            - *args: Positional arguments representing the record data.
-            - **kwargs: Keyword arguments representing the record data.
+            - *args: Positional arguments representing the record data. (e.g., str, int, ...)
+            - **kwargs: Keyword arguments representing the record data. (e.g., username=str, email=str, ...)
 
             Example:
             ```python
             await record(username="john_doe", email="john@example.com")
             ```
             """
-            data_cls = self.tables[table_name](*args, **kwargs)
+            data_cls = self.tables[data_class.table_name](*args, **kwargs)
             field_vals = {}
             for field in fields(data_cls):
                 value = getattr(data_cls, field.name)
@@ -180,25 +176,28 @@ class Db:
 
             columns_str = ", ".join(field_vals.keys())
             placeholders = ", ".join("?" for _ in insertion_vals)
-            sql = f"INSERT INTO {table_name} ({columns_str}) VALUES ({placeholders});"
+            sql = f"INSERT INTO {data_class.table_name} ({columns_str}) VALUES ({placeholders});"
             await self.conn.execute(sql, insertion_vals)
             await self.conn.commit()
 
         return record
 
-    def update(self, table_name: str, column_identifier: str) -> Callable[..., None]:
+    def update(
+        self, data_class: is_dataclass, column_identifier: None | str = None
+    ) -> Callable[..., None]:
         """
         Create a record update operation for the specified table.
 
         Parameters:
-        - table_name (str): The name of the table to update records in.
+        - data_class (Type[YourDataClass]): The data class representing the table structure.
+        - column_identifier (None | str): The column to use for identifying records.
 
         Returns:
         - Callable[..., None]: A function to be called with the record data for updating.
 
         Example:
         ```python
-        update_user = your_database_instance.update("users")
+        update_user = your_database_instance.update(User)
         await update_user(username="john_doe", email="john@example.com")
         ```
         """
@@ -216,81 +215,131 @@ class Db:
             await record(username="john_doe", email="john@example.com")
             ```
             """
-            data_cls = self.tables[table_name](*args, **kwargs)
-            field_names = get_field_names(data_cls)
-            field_names.remove(column_identifier)
-            values = get_field_values(data_cls, field_names)
-            tup = (values[0], args[0])
-            non_none_columns = get_non_none_columns(field_names, values)
+            data_cls = self.tables[data_class.table_name](*args, **kwargs)
+            values = []
             set_clauses_placeholders = []
-            for column in non_none_columns:
-                set_clause = f"{column[0]} = ?"
+            for column, value in kwargs.items():
+                values.append(value)
+                set_clause = f"{column} = ?"
                 set_clauses_placeholders.append(set_clause)
-
             set_clause_string = ", ".join(set_clauses_placeholders)
+            values.append(data_cls.username)
+            identifier = (
+                column_identifier
+                if column_identifier is not None
+                else data_cls.primary_key
+            )
+            sql = f"UPDATE {data_class.table_name} SET {set_clause_string} WHERE {identifier} = ?"
 
-            sql = f"UPDATE {table_name} SET {set_clause_string} WHERE username = ?"
-
-            await self.conn.execute(sql, tup)
+            await self.conn.execute(sql, tuple(values))
             await self.conn.commit()
 
         return record
 
-    def update(self, table_name: str, column_identifier: str) -> Callable[..., None]:
+    def find(
+        self, data_class: is_dataclass, column_identifier: None | str = None
+    ) -> Callable[..., None]:
         """
-        Create a record update operation for the specified table.
+        Create a record retrieval operation for the specified table.
 
         Parameters:
-        - table_name (str): The name of the table to update records in.
-        - column_identifier (str): The column used to identify the record.
+        - data_class (Type[YourDataClass]): The data class representing the table structure.
+        - column_identifier (None | str): The column to use for identifying records.
 
         Returns:
-        - Callable[..., None]: A function to be called with the record data for updating.
+        - Callable[..., None]: A function to be called with the identifier for record retrieval.
 
         Example:
         ```python
-        update_user = your_database_instance.update("users", "username")
-        await update_user(username="john_doe", email="john@example.com")
+        find_user = your_database_instance.find(User, column_identifier="username")
+        user_instance = await find_user("john_doe")
         ```
+
+        The returned function can be called with the identifier to retrieve a record from the specified table.
+
+        Args:
+        - *args: Positional arguments representing the identifier for record retrieval.
+        - **kwargs: Keyword arguments representing the identifier for record retrieval.
+
+        Example:
+        ```python
+        user_instance = await record("john_doe")
+        ```
+
+        The record retrieval operation fetches a record from the specified table based on the provided identifier.
+
+        Returns:
+        - Type[YourDataClass]: An instance of the data class representing the retrieved record.
         """
 
-        async def record(*args: Any, **kwargs: Any) -> None:
-            """
-            Update records in the specified table.
+        async def record(*args, **kwargs) -> None:
+            data_cls = self.tables[data_class.table_name](*args, **kwargs)
+            identifier = (
+                column_identifier
+                if column_identifier is not None
+                else data_cls.primary_key
+            )
+            results = []
+            sql = f"SELECT * FROM {data_cls.table_name} WHERE {identifier} = ?"
+            sql_args = (args[0],)
+            async with self.conn.execute(sql, sql_args) as cursor:
+                results = await cursor.fetchall()
+            username_tuple = results[0]
+            data_cls = data_class(*username_tuple, *results[1:])
 
-            Arguments:
-            - *args: Positional arguments representing the record data.
-            - **kwargs: Keyword arguments representing the record data.
-
-            Example:
-            ```python
-            await record(username="john_doe", email="john@example.com")
-            ```
-            """
-            data_cls = self.tables[table_name](*args, **kwargs)
-
-            field_vals = {}
-            for field in fields(data_cls):
-                if field.name != column_identifier:
-                    value = getattr(data_cls, field.name)
-                    if value is not None and value != data_cls.table_name:
-                        field_vals[field.name] = value
-                else:
-                    # Always the value we're identifying on
-                    field_vals[field.name] = args[0]
-
-            record_identifier = field_vals[column_identifier]
-            del field_vals[column_identifier]
-            insertion_vals = tuple(field_vals.values()) + (record_identifier,)
-
-            set_clauses_placeholders = [f"{column} = ?" for column in field_vals.keys()]
-            set_clause_string = ", ".join(set_clauses_placeholders)
-
-            sql = f"UPDATE {table_name} SET {set_clause_string} WHERE {column_identifier} = ?"
-            await self.conn.execute(sql, insertion_vals)
-            await self.conn.commit()
+            return data_cls
 
         return record
+
+    def delete(
+        self, data_class: is_dataclass, column_identifier: None | str = None
+    ) -> Callable[..., None]:
+        """
+        Create a record deletion operation for the specified table.
+
+        Parameters:
+        - data_class (Type[YourDataClass]): The data class representing the table structure.
+        - column_identifier (None | str): The column to use for identifying records.
+
+        Returns:
+        - Callable[..., None]: A function to be called with the identifier for record deletion.
+
+        Example:
+        ```python
+        delete_user = your_database_instance.delete(User, column_identifier="username")
+        await delete_user("john_doe")
+        ```
+
+        The returned function can be called with the identifier to delete a record from the specified table.
+
+        Args:
+        - *args: Positional arguments representing the identifier for record deletion.
+        - **kwargs: Keyword arguments representing the identifier for record deletion.
+
+        Example:
+        ```python
+        await delete_record("john_doe")
+        ```
+
+        The record deletion operation removes a record from the specified table based on the provided identifier.
+        """
+
+        async def delete_record(*args, **kwargs) -> None:
+            data_cls = self.tables[data_class.table_name](*args, **kwargs)
+            identifier = (
+                column_identifier
+                if column_identifier is not None
+                else data_cls.primary_key
+            )
+
+            sql = f"DELETE FROM {data_cls.table_name} WHERE {identifier} = ?"
+            sql_args = (args[0],)
+
+            async with self.conn.execute(sql, sql_args) as cursor:
+                await cursor.fetchall()
+            await self.conn.commit()
+
+        return delete_record
 
     async def connect(self) -> None:
         """
