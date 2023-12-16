@@ -9,8 +9,6 @@ Subpackages
 
    aiodesa.utils
 
-Submodules
-----------
 
 aiodesa.Database module
 -----------------------
@@ -19,7 +17,6 @@ aiodesa.Database module
    :members:
    :undoc-members:
    :show-inheritance:
-
 
 Module contents
 ---------------

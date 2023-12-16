@@ -8,17 +8,19 @@ class ForeignKey(NamedTuple):
     Represents a foreign key relationship in a database.
 
     Attributes:
-        key (str): The column name representing the foreign key.
-        table (str): The name of the referenced table.
+    - key (str): The column name representing the foreign key.
+    - table (str): The name of the referenced table.
 
     Example:
-        Define a foreign key with the column name 'user_id' referencing the 'users' table:
+    .. code-block:: python
 
-        >>> user_foreign_key = ForeignKey(key='user_id', table='users')
+        # Define a foreign key with the column name 'user_id' referencing the 'users' table:
+        user_foreign_key = ForeignKey(key='user_id', table='users')
 
-    Attributes:
-        key (str): The column name representing the foreign key.
-        table (str): The name of the referenced table.
+    Note:
+    - This class is a NamedTuple representing a foreign key relationship in a database.
+    - The `key` attribute is the column name representing the foreign key.
+    - The `table` attribute is the name of the referenced table.
     """
 
     key: str
@@ -30,15 +32,17 @@ class PrimaryKey(NamedTuple):
     Represents primary key columns in a database table.
 
     Attributes:
-        columns (Tuple[str]): Tuple of column names representing primary keys.
+    - columns (Tuple[str]): Tuple of column names representing primary keys.
 
     Example:
-        Define a primary key with the column names 'user_id' and 'post_id':
+    .. code-block:: python
 
-        >>> user_primary_key = PrimaryKey(columns=('user_id', 'post_id'))
+        # Define a primary key with the column names 'user_id' and 'post_id':
+        user_primary_key = PrimaryKey(columns=('user_id', 'post_id'))
 
-    Attributes:
-        column str: Column name representing primary key.
+    Note:
+    - This class is a NamedTuple representing primary key columns in a database table.
+    - The `columns` attribute is a tuple of column names representing primary keys.
     """
 
     column: str
@@ -49,21 +53,42 @@ class UniqueKey(NamedTuple):
     Represents unique key columns in a database table.
 
     Attributes:
-        columns (Tuple[str]): Tuple of column names representing unique keys.
+    - columns (Tuple[str]): Tuple of column names representing unique keys.
 
     Example:
-        Define a unique key with the column names 'username' and 'email':
+    .. code-block:: python
 
-        >>> user_unique_key = UniqueKey(columns=('username', 'email'))
+        # Define a unique key with the column names 'username' and 'email':
+        user_unique_key = UniqueKey(columns=('username', 'email'))
 
-    Attributes:
-        columns str: Column name representing unique keys
+    Note:
+    - This class is a NamedTuple representing unique key columns in a database table.
+    - The `columns` attribute is a tuple of column names representing unique keys.
     """
 
     column: str
 
 
 class UpdateRecord(NamedTuple):
+    """
+    Represents a record update in a database table.
+
+    Attributes:
+    - column_name (str): The name of the column to be updated.
+    - value (Any): The new value to set for the specified column.
+
+    Example:
+    .. code-block:: python
+
+        # Define an update record for changing the 'email' column to 'new_email@example.com':
+        update_email_record = UpdateRecord(column_name='email', value='new_email@example.com')
+
+    Note:
+    - This class is a NamedTuple representing a record update in a database table.
+    - The `column_name` attribute is the name of the column to be updated.
+    - The `value` attribute is the new value to set for the specified column.
+    """
+
     column_name: str
     value: Any
 
@@ -73,23 +98,22 @@ def set_key(*args: PrimaryKey | UniqueKey | ForeignKey | tuple[ForeignKey, ...])
     Decorator for setting primary keys, unique keys, and foreign keys on a class.
 
     Parameters:
-    - *args (PrimaryKey | UniqueKey | ForeignKey | tuple[ForeignKey, ...]):
-        The keys to be set. Can include PrimaryKey, UniqueKey, ForeignKey, or a tuple of ForeignKeys.
+    - `*args` (PrimaryKey | UniqueKey | ForeignKey | Tuple[ForeignKey, ...]):
+    The keys to be set. Can include PrimaryKey, UniqueKey, ForeignKey, or a tuple of ForeignKeys.
 
     Returns:
     - Callable[[Type], Type]: A decorator function to set keys on a class.
 
     Example:
-    ```python
-    @YourClass.set_key(PrimaryKey("id"), UniqueKey("username"))
-    class YourModel:
-        # Class definition
-    ```
+    .. code-block:: python
+
+        @YourClass.set_key(PrimaryKey("id"), UniqueKey("username"))
+        class YourModel:
+        #    Class definition
 
     Note:
     - When using tuples for ForeignKeys, make sure not to include PrimaryKey or UniqueKey instances within the tuple.
     - Foreign keys can be specified individually or as a tuple.
-
     """
 
     def decorator(cls):
@@ -124,12 +148,20 @@ class TableSchema:
     """
     Represents the schema for a database table.
 
-    Parameters
-    ----------
-    table_name : str
-        The name of the table.
-    data : str
-        The SQL data definition language (DDL) statement for creating the table.
+    Parameters:
+    - table_name (str): The name of the table.
+    - data (str): The SQL data definition language (DDL) statement for creating the table.
+
+    Example:
+    .. code-block:: python
+
+        # Create a TableSchema for a 'users' table
+        user_table_schema = TableSchema(table_name='users', data='CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT);')
+
+    Note:
+    - This class is decorated with the @dataclass decorator for concise attribute initialization.
+    - The `table_name` attribute represents the name of the table.
+    - The `data` attribute contains the SQL data definition language (DDL) statement for creating the table.
     """
 
     table_name: str
@@ -140,17 +172,23 @@ def make_schema(name: str, data_cls: Any) -> TableSchema:
     """
     Generate a TableSchema based on the provided data class.
 
-    Parameters
-    ----------
-    name : str
-        The name of the table.
-    data_cls : type
-        A data class defining the schema for the table.
+    Parameters:
+    - name (str): The name of the table.
+    - data_cls (Type): A data class defining the schema for the table.
 
-    Returns
-    -------
-    TableSchema
-        An instance of TableSchema containing the table_name and SQL data definition.
+    Returns:
+    - TableSchema: An instance of TableSchema containing the table_name and SQL data definition.
+
+    Example:
+    .. code-block:: python
+
+        # Generate a TableSchema for a 'users' table based on the User data class
+        user_table_schema = generate_table_schema(name='users', data_cls=User)
+
+    Note:
+    - The `name` parameter represents the name of the table.
+    - The `data_cls` parameter is the data class defining the schema for the table.
+    - The function returns a TableSchema instance containing the table_name and SQL data definition.
     """
     columns = []
     name = name.replace(" ", "_")

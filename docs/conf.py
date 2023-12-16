@@ -11,7 +11,7 @@ import sys
 
 print(sys.path[0])
 
-sys.path.insert(0, os.path.abspath("aiodesa"))
+sys.path.insert(0, os.path.abspath("../aiodesa"))
 print(sys.path[0])
 
 project = "AioDesa"
@@ -21,7 +21,7 @@ release = "0.1.9"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
-
+napoleon_google_docstring = True
 extensions = ["sphinx.ext.autodoc", "sphinx.ext.viewcode", "sphinx.ext.napoleon"]
 
 templates_path = ["_templates"]

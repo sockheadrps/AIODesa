@@ -15,31 +15,6 @@ class Db:
     db_path : str
                     The path to the SQLite database file.
 
-    Attributes
-    ----------
-    db_path : pathlib.Path
-                    The path to the SQLite database file.
-    conn : aiosqlite.Connection or None
-                    The SQLite database connection object. Initialized as None until the database is connected.
-
-    Methods
-    -------
-    _create_db()
-                    Internal method to create the database file if it does not exist.
-    read_table_schemas(schema)
-                    Read table schemas and create tables in the database based on the provided schema.
-    table_exists(table_name)
-                    Check if a table with the specified name exists in the database.
-    create_table(named_data, name)
-                    Create a table in the database based on the provided TableSchema instance.
-    connect()
-                    Establish a connection to the SQLite database.
-    close()
-                    Close the connection to the SQLite database.
-    __aenter__()
-                    Async context manager entry point to automatically connect to the database.
-    __aexit__(exc_type, exc_value, traceback)
-                    Async context manager exit point to automatically close the database connection.
     """
 
     tables: dict
@@ -55,10 +30,10 @@ class Db:
     def _create_db(self) -> None:
         """
         Internal method to create the database file if it does not exist.
-        Notes
-        -----
-        This method is automatically called during the initialization of the Db class.
-        It ensures that the SQLite database file is created at the specified path if it does not exist.
+
+        Notes:
+        - This method is automatically called during the initialization of the Db class.
+        - It ensures that the SQLite database file is created at the specified path if it does not exist.
         """
         if not self.db_path.exists():
             self.db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -68,13 +43,30 @@ class Db:
         self, schema: IsDataclass | Tuple[IsDataclass, ...]
     ) -> None:
         """
-        Read table schemas and create tables in the database based on the provided schema.
+        Check if a table with the specified name exists in the database.
 
-        Parameters
-        ----------
-        schema : Union[type, Tuple[type, ...], str]
-                        The schema definition, which can be a single dataclass, a tuple of dataclasses,
-                        or the path to a .py file containing dataclass objects.
+        Parameters:
+        - table_name (str): The name of the table to check.
+
+        Returns:
+        - Optional[bool]: True if the table exists, False otherwise.
+
+        Example:
+        .. code-block:: python
+
+            if your_database_instance.table_exists("users"):
+                print("The 'users' table exists.")
+            else:
+                print("The 'users' table does not exist.")
+
+
+        This method returns True if a table with the specified name exists in the database; otherwise, it returns False.
+
+        Args:
+        - table_name: The name of the table to check for existence.
+
+        Note:
+        This method provides an optional boolean result, as it may return None if there are issues determining table existence.
         """
         self.tables[schema.table_name] = schema
         # single dataclass
@@ -98,17 +90,30 @@ class Db:
 
     async def table_exists(self, table_name: str) -> bool | None:
         """
-        Check if a table with the specified name exists in the database.
+        Create a table in the database based on the provided TableSchema instance.
 
-        Parameters
-        ----------
-        table_name : str
-                        The name of the table to check.
+        Parameters:
+        - named_data (TableSchema): The TableSchema instance containing the table_name and SQL data definition.
+        - name (str): The name of the table.
 
-        Returns
-        -------
-        Optional[bool]
-                        True if the table exists, False otherwise.
+        Returns:
+        None
+
+        Example:
+        ```python
+        table_schema = TableSchema(table_name="users", sql_definition="id INTEGER PRIMARY KEY, name TEXT, email TEXT")
+        your_database_instance.create_table(table_schema, name="users")
+        ```
+
+        This method creates a table in the database with the specified name and schema.
+
+        Args:
+        - named_data: An instance of TableSchema representing the schema definition for the table.
+        - name: The name to be assigned to the table in the database.
+
+        Note:
+        The `named_data` parameter should include the `table_name` property for the name of the table
+        and the `sql_definition` property for the SQL data definition of the table.
         """
         if self.conn is not None:
             query = f"SELECT name FROM sqlite_master WHERE type='table' AND name=?;"
@@ -121,12 +126,28 @@ class Db:
         """
         Create a table in the database based on the provided TableSchema instance.
 
-        Parameters
-        ----------
-        named_data : TableSchema
-                        The TableSchema instance containing the table_name and SQL data definition.
-        name : str
-                        The name of the table.
+        Parameters:
+        - named_data (TableSchema): The TableSchema instance containing the table_name and SQL data definition.
+        - name (str): The name of the table.
+
+        Returns:
+        None
+
+        Example:
+        ```python
+        table_schema = TableSchema(table_name="users", sql_definition="id INTEGER PRIMARY KEY, name TEXT, email TEXT")
+        your_database_instance.create_table(table_schema, name="users")
+        ```
+
+        This method creates a table in the database with the specified name and schema.
+
+        Args:
+        - named_data: An instance of TableSchema representing the schema definition for the table.
+        - name: The name to be assigned to the table in the database.
+
+        Note:
+        The `named_data` parameter should include the `table_name` property for the name of the table
+        and the `sql_definition` property for the SQL data definition of the table.
         """
         if self.conn is not None:
             if not await self.table_exists(name):
@@ -139,32 +160,36 @@ class Db:
         Create a record and insert it into the specified table.
 
         Parameters:
-        - data_class (Type): The data class representing the table structure.
+        - data_class (Type[YourDataClass]): The data class representing the table structure.
 
         Returns:
         - Callable[..., None]: A function to be called with the record data.
 
         Example:
-        ```python
-        insert_user = your_database_instance.insert(User)
-        await insert_user(username="john_doe", email="john@example.com")
-        ```
+        .. code-block:: python
+
+            insert_user = your_database_instance.insert(User)
+            await insert_user(username="john_doe", email="john@example.com")
+
+
+        The returned function can be called with the record data to insert a new record into the specified table.
+
+        Args:
+        - `**kwargs`: Keyword arguments representing the data for the new record.
+
+        Example:
+        .. code-block:: python
+
+            await insert_record(username="john_doe", email="john@example.com")
+
+
+        The record insertion operation adds a new record to the specified table.
+
+        Note:
+        The primary key of the data class will be automatically generated if it is not provided in the record data.
         """
 
         async def record(*args: Any, **kwargs: Any) -> None:
-            """
-            Insert a record into the specified table.
-
-
-            Arguments:
-            - *args: Positional arguments representing the record data. (e.g., str, int, ...)
-            - **kwargs: Keyword arguments representing the record data. (e.g., username=str, email=str, ...)
-
-            Example:
-            ```python
-            await record(username="john_doe", email="john@example.com")
-            ```
-            """
             data_cls = self.tables[data_class.table_name](*args, **kwargs)
             field_vals = {}
             for field in fields(data_cls):
@@ -190,31 +215,36 @@ class Db:
 
         Parameters:
         - data_class (Type[YourDataClass]): The data class representing the table structure.
-        - column_identifier (None | str): The column to use for identifying records.
+        - column_identifier (Optional[str]): The column to use for identifying records.
 
         Returns:
         - Callable[..., None]: A function to be called with the record data for updating.
 
         Example:
-        ```python
-        update_user = your_database_instance.update(User)
-        await update_user(username="john_doe", email="john@example.com")
-        ```
+        .. code-block:: python
+
+            update_user = your_database_instance.update(User)
+            await update_user(username="john_doe", email="john@example.com")
+
+
+        The returned function can be called with the record data to update a record in the specified table.
+
+        Args:
+        - `**kwargs`: Keyword arguments representing the updated data for the record.
+
+        Example:
+        .. code-block:: python
+
+            await update_record(username="john_doe", email="john@example.com")
+
+
+        The record update operation modifies a record in the specified table based on the provided identifier.
+
+        Note:
+        If the `column_identifier` is not provided, the primary key of the data class will be used as the identifier.
         """
 
         async def record(*args, **kwargs) -> None:
-            """
-            Update records in the specified table.
-
-            Arguments:
-            - *args: Positional arguments representing the record data.
-            - **kwargs: Keyword arguments representing the record data.
-
-            Example:
-            ```python
-            await record(username="john_doe", email="john@example.com")
-            ```
-            """
             data_cls = self.tables[data_class.table_name](*args, **kwargs)
             values = []
             set_clauses_placeholders = []
@@ -244,32 +274,34 @@ class Db:
 
         Parameters:
         - data_class (Type[YourDataClass]): The data class representing the table structure.
-        - column_identifier (None | str): The column to use for identifying records.
+        - column_identifier (Optional[Union[None, str]]): The column to use for identifying records.
+        Defaults to the primary key of the data class if not specified.
 
         Returns:
         - Callable[..., None]: A function to be called with the identifier for record retrieval.
 
         Example:
-        ```python
-        find_user = your_database_instance.find(User, column_identifier="username")
-        user_instance = await find_user("john_doe")
-        ```
+        .. code-block:: python
+
+            find_user = your_database_instance.find(User, column_identifier="username")
+            user_record = await find_user("john_doe")
+
 
         The returned function can be called with the identifier to retrieve a record from the specified table.
 
         Args:
-        - *args: Positional arguments representing the identifier for record retrieval.
-        - **kwargs: Keyword arguments representing the identifier for record retrieval.
-
-        Example:
-        ```python
-        user_instance = await record("john_doe")
-        ```
-
-        The record retrieval operation fetches a record from the specified table based on the provided identifier.
+        - `*args`: Positional arguments representing the identifier for record retrieval.
+        - `**kwargs`: Keyword arguments representing the identifier for record retrieval.
 
         Returns:
-        - Type[YourDataClass]: An instance of the data class representing the retrieved record.
+        Type[YourDataClass]: An instance of the data class representing the retrieved record.
+
+        Example:
+        .. code-block:: python
+
+            user_record = await find_record("john_doe")
+
+        The record retrieval operation fetches a record from the specified table based on the provided identifier.
         """
 
         async def record(*args, **kwargs) -> None:
@@ -305,21 +337,21 @@ class Db:
         - Callable[..., None]: A function to be called with the identifier for record deletion.
 
         Example:
-        ```python
-        delete_user = your_database_instance.delete(User, column_identifier="username")
-        await delete_user("john_doe")
-        ```
+        .. code-block:: python
+
+            delete_user = your_database_instance.delete(User, column_identifier="username")
+            await delete_user("john_doe")
 
         The returned function can be called with the identifier to delete a record from the specified table.
 
         Args:
-        - *args: Positional arguments representing the identifier for record deletion.
-        - **kwargs: Keyword arguments representing the identifier for record deletion.
+        - `*args`: Positional arguments representing the identifier for record deletion.
+        - `**kwargs`: Keyword arguments representing the identifier for record deletion.
 
         Example:
-        ```python
-        await delete_record("john_doe")
-        ```
+        .. code-block:: python
+
+            await delete_record("john_doe")
 
         The record deletion operation removes a record from the specified table based on the provided identifier.
         """
@@ -344,30 +376,94 @@ class Db:
     async def connect(self) -> None:
         """
         Establish a connection to the SQLite database.
+
+        Returns:
+        None
+
+        Example:
+        ```python
+        connection = YourDatabaseConnection()
+        await connection.connect()
+        # The database connection is now established.
+        ```
+
+        Note:
+        This method initializes the connection to the SQLite database using the provided `db_path`.
         """
         self.conn = await aiosqlite.connect(self.db_path)
 
     async def close(self) -> None:
         """
         Close the connection to the SQLite database.
+
+        Returns:
+        None
+
+        Example:
+        .. code-block:: python
+
+            connection = YourDatabaseConnection()
+            await connection.connect()
+
+        # Your database operations here
+
+        await connection.close()
+        # The database connection is now closed.
+
+        Note:
+        This method closes the connection to the SQLite database if it is open.
         """
         if self.conn is not None:
             await self.conn.close()
 
     async def __aenter__(self) -> "Db":
         """
-        Async context manager entry point to automatically connect to the database.
+        Asynchronous context manager entry point.
 
-        Returns
-        -------
-        Db
-                        The Db instance with an active database connection.
+        Automatically connects to the database upon entering the context.
+
+        Returns:
+        Db:
+            The Db instance with an active database connection.
+
+        Example:
+        .. code-block:: python
+
+            async with YourDatabaseConnection() as connection:
+                # Your asynchronous code here
+
+        # Upon entering the context, the database connection is automatically established.
+
+        Note:
+        This method is intended for use with the `async with` statement in an asynchronous context manager.
+        The returned `Db` instance represents the connection to the database.
         """
         await self.connect()
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         """
-        Async context manager exit point to automatically close the database connection.
+        Asynchronous context manager exit point.
+
+        Automatically closes the database connection upon exiting the context.
+
+        Parameters:
+        - exc_type (Type): The type of the exception raised, if any.
+        - exc_value (Exception): The exception object, if an exception occurred. Otherwise, None.
+        - traceback (TracebackType): The traceback information related to the exception, if any.
+
+        Returns:
+        None
+
+        Example:
+        .. code-block:: python
+
+            async with YourDatabaseConnection() as connection:
+                # Your asynchronous code here
+
+        # Upon exiting the context, the database connection is automatically closed.
+
+        Note:
+        This method is intended for use with the `async with` statement in an asynchronous context manager.
         """
         await self.close()

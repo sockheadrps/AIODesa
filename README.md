@@ -1,12 +1,20 @@
 # Asyncio Dead Easy Sql API
 
-## Are you tired of re-writing SQLite DB's for your projects? Me too. AIODesa makes standing up simple, usable applications extremely easy and effective.
+## Simplify Your Personal Projects with AIODesa
 
-### AIODesa offers a straightforward and 100% Python interface for managing asynchronous data access. By leveraging Python's built-ins and standard library, it seamlessly wraps around AioSqlite, providing a hassle-free experience. With AIODesa, you can define, generate, and commit data effortlessly, thanks to shared objects for tables and records.
+### Are you tired of the hassle of setting up complex databases for your personal projects? AIODesa is the solution! Designed with developer experience in mind, AIODesa makes managing asynchronous database access a breeze, perfect for smaller-scale applications where extensive database operations are not a priority.
 
-AIODesa aims to make defining SQL tables and records easy by utilizing dataclasses to define structure of both tables and records. No more re-writing schemas.
+### *No need to write even a single line of raw SQL.*
 
-## AioDesa
+AIODesa offers a straightforward and 100% Python interface for managing asynchronous database access. By leveraging Python's built-ins and standard library, it seamlessly wraps around AioSqlite, providing a hassle-free experience. With AIODesa, you can define, generate, and commit data effortlessly, thanks to shared objects for tables and records.
+
+
+### Ideal for Personal Projects
+
+AIODesa is specifically crafted for simpler projects where database IO is minimal. It's not intended for heavy production use but rather serves as an excellent choice for personal projects that require data persistence without the complexity of a full-scale database setup. SQLite is leveraged here, meaning youre free to use other SQLite drivers to consume and transform the data if your project outgrows AIODesa.
+
+Whether you're working on a hobby project or a small personal application, AIODesa streamlines the process, allowing you to focus on your ideas rather than intricate database configurations.
+
 
 ![AIODesa](https://github.com/sockheadrps/AIODesa/blob/main/AIODesaEx1.png?raw=true)
 
