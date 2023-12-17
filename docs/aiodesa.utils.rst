@@ -1,14 +1,24 @@
 aiodesa.utils package
 =====================
 
-Subpackages
------------
+Submodules
+----------
 
-.. toctree::
-   :maxdepth: 4
+aiodesa.utils.table module
+--------------------------
 
-   aiodesa.utils.tables
-   aiodesa.utils.types
+.. automodule:: aiodesa.utils.table
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+aiodesa.utils.types module
+--------------------------
+
+.. automodule:: aiodesa.utils.types
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Module contents
 ---------------

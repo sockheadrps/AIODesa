@@ -10,6 +10,7 @@ Welcome to AioDesa's documentation!
    :maxdepth: 2
    :caption: Contents:
    
+   quickstart
    modules
 
 

@@ -11,6 +11,7 @@ aiosqlite = "^0.19.0"
 Sphinx = "^7.2.6"
 sphinx-rtd-theme = "^2.0.0"
 sphinxcontrib-napoleon = "^0.7"
+sphinx-autodoc-typehints = "^1.25.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.0"

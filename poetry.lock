@@ -371,6 +371,22 @@ lint = ["flake8 (>=3.5.0)", "flake8-simplify", "isort", "ruff", "mypy (>=0.990)"
 test = ["pytest (>=4.6)", "html5lib", "cython (>=3.0)", "setuptools (>=67.0)", "filelock"]
 
 [[package]]
+name = "sphinx-autodoc-typehints"
+version = "1.25.2"
+description = "Type hints (PEP 484) support for the Sphinx autodoc extension"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+sphinx = ">=7.1.2"
+
+[package.extras]
+docs = ["furo (>=2023.7.26)", "sphinx (>=7.1.2)"]
+numpy = ["nptyping (>=2.5)"]
+testing = ["covdefaults (>=2.3)", "coverage (>=7.3)", "diff-cover (>=7.7)", "pytest-cov (>=4.1)", "pytest (>=7.4)", "sphobjinv (>=2.3.1)", "typing-extensions (>=4.7.1)"]
+
+[[package]]
 name = "sphinx-rtd-theme"
 version = "2.0.0"
 description = "Read the Docs theme for Sphinx"
@@ -544,7 +560,7 @@ test = ["covdefaults (>=2.3)", "coverage-enable-subprocess (>=1)", "coverage (>=
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "1901cd12ee5af064e6d7d4bc4f77468d0635c16b3bc9f5f5209e386a84d13d26"
+content-hash = "74250d7acd4f7e41229a419109a805d779e821dae2743a1526fb6f5aefff34ae"
 
 [metadata.files]
 aiosqlite = []
@@ -580,6 +596,7 @@ requests = []
 six = []
 snowballstemmer = []
 sphinx = []
+sphinx-autodoc-typehints = []
 sphinx-rtd-theme = []
 sphinxcontrib-applehelp = []
 sphinxcontrib-devhelp = []

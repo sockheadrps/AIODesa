@@ -1,5 +1,4 @@
-aiodesa package
-===============
+
 
 Subpackages
 -----------
@@ -14,14 +13,6 @@ aiodesa.Database module
 -----------------------
 
 .. automodule:: aiodesa.Database
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: aiodesa
    :members:
    :undoc-members:
    :show-inheritance:
