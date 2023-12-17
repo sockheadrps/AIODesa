@@ -5,11 +5,9 @@ on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
 
   # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+  # workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs: 
@@ -25,9 +23,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10' 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
         
       - name: Install dependencies
         run: | 
@@ -36,17 +31,13 @@ jobs:
           pip install sphinx
           pip install sphinx-rtd-theme
           pip install sphinxcontrib-napoleon
+          pip install sphinx-autodoc-typehints
           pip install ghp-import
       - name: Build HTML
         run: | 
           cd docs/
           make html
+          
       - name: Run ghp-import
         run: | 
           ghp-import -n -p -f docs/_build/html
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
