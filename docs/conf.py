@@ -9,10 +9,7 @@
 import os
 import sys
 
-print(sys.path[0])
-
-sys.path.insert(0, os.path.abspath("../aiodesa"))
-print(sys.path[0])
+sys.path.insert(0, os.path.abspath("../"))
 
 project = "AioDesa"
 copyright = "2023, sockheadrps"
