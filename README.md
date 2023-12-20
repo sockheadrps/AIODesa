@@ -1,4 +1,11 @@
 # Asyncio Dead Easy Sql API
+![MyPy](https://img.shields.io/badge/mypy-type%20checked-brightgreen)
+![Coverage](https://img.shields.io/badge/pytest_coverage-100%25-brightgreen)
+![Code Style](https://img.shields.io/badge/code%20style-black-000000)
+![Pylint](https://img.shields.io/badge/pylint%20code%20quality-10-brightgreen)
+![Flake8](https://img.shields.io/badge/flake8-passed-brightgreen)
+![Read the Docs](https://img.shields.io/badge/documentation-latest-blue)
+
 
 ## Simplify Your Personal Projects with AIODesa
 
