@@ -10,15 +10,15 @@ Example:
 
 .. code-block:: python
 
-from aiodesa import Db
+    from aiodesa import Db
 
-class Users:
-    username: str
-    id: str | None = None
-    table_name: str = "users"
+    class Users:
+        username: str
+        id: str | None = None
+        table_name: str = "users"
 
-async with Db("database.sqlite3") as db:
-    await db.read_table_schemas(Users)
+    async with Db("database.sqlite3") as db:
+        await db.read_table_schemas(Users)
 """
 
 from dataclasses import is_dataclass, fields
