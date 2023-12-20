@@ -1,6 +1,6 @@
 from enum import Enum
 import builtins
-from typing import ClassVar, Dict, Protocol, Any
+from typing import ClassVar, Dict, Protocol, Any, runtime_checkable
 from types import UnionType
 
 
@@ -22,8 +22,9 @@ class SQLDataType(Enum):
     INTEGER = "INTEGER"
     SMALLINT = "SMALLINT"
     BIGINT = "BIGINT"
+    NONE = "NULL"
     PRIMARY = " PRIMARY KEY"
-    UNIQUE = " UNIQUE"
+    UNIQUE = " UNIQUE KEY"
 
 
 def py_to_sql_type(data: Any) -> str:
@@ -54,26 +55,25 @@ def py_to_sql_type(data: Any) -> str:
                 data = tmp[1]
             elif tmp[1]() is None:
                 data = tmp[0]
-
-        match data:
-            case builtins.int:
-                return_type = "INT"
-            case builtins.str:
-                return_type = "VARCHAR"
-            case builtins.float:
-                return_type = "FLOAT"
-            case builtins.bool:
-                return_type = "BOOLEAN"
-            case builtins.bytes, builtins.bytearray, builtins.list, builtins.tuple, builtins.set, builtins.dict:
-                return_type = "TEXT"
-            case None:
-                return_type = "TEXT"
-            case _:
-                print(data.__args__[0])
-                raise ValueError(f"Unsupported data type: {type(data)}")
-        return return_type
+    match data:
+        case builtins.int:
+            return_type = "INT"
+        case builtins.str:
+            return_type = "VARCHAR"
+        case builtins.float:
+            return_type = "FLOAT"
+        case builtins.bool:
+            return_type = "BOOLEAN"
+        case builtins.bytes | builtins.bytearray | builtins.list | builtins.tuple | builtins.set | builtins.dict:
+            return_type = "TEXT"
+        case None:
+            return_type = "NULL"
+        case _:
+            raise ValueError(f"Unsupported data type: {type(data)}")
+    return return_type
 
 
+@runtime_checkable
 class IsDataclass(Protocol):
     """
     Protocol indicating that a class is a data class.
