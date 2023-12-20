@@ -1,1 +1,4 @@
-from .Database import Db
+"""
+Access layer for DB class
+"""
+from .database import Db

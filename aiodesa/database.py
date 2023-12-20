@@ -1,9 +1,31 @@
+"""
+aiodesa.Database: Simple SQLite Database Interface
+
+This module provides the `Db` class, a simple SQLite database interface that supports asynchronous operations.
+
+Classes:
+    - Db: Represents a simple SQLite database interface.
+
+Example:
+
+.. code-block:: python
+from aiodesa import Db
+
+class Users:
+    username: str
+    id: str | None = None
+    table_name: str = "users"
+
+async with Db("database.sqlite3") as db:
+    await db.read_table_schemas(Users)
+    ...
+"""
+
 from dataclasses import is_dataclass, fields
-from typing import Tuple, Callable, Any
+from typing import Tuple, Callable, Any, Coroutine
 from pathlib import Path
 import aiosqlite
 from aiodesa.utils.table import make_schema, TableSchema
-from aiodesa.utils.types import IsDataclass
 
 
 class Db:
@@ -52,9 +74,28 @@ class Db:
             self.db_path.parent.mkdir(parents=True, exist_ok=True)
             self.db_path.touch()
 
-    async def read_table_schemas(
-        self, schema: IsDataclass | Tuple[IsDataclass, ...]
-    ) -> None:
+    async def _process_single_data_class(self, schema: Any) -> None:
+        """
+        Process a single data class schema.
+
+        Args:
+            schema: The data class schema representing a table.
+
+        Returns:
+            This method does not return any value.
+        """
+        if not is_dataclass(schema):
+            raise ValueError("Provided schema is not a data class")
+
+        # Now, the type checker should be able to understand that schema is a DataclassInstance
+        self._tables[schema.table_name] = schema
+        class_fields = fields(schema)
+        for field in class_fields:
+            if field.name == "table_name":
+                schema_ = make_schema(str(field.default), schema)
+                await self._create_table(schema_, field.name)
+
+    async def read_table_schemas(self, class_obj: Any | Tuple[Any, ...]) -> None:
         """Read table schemas and create tables in the database.
 
         Args:
@@ -82,24 +123,14 @@ class Db:
             Provide any additional notes or considerations about the method.
         """
         # single dataclass
-        if is_dataclass(schema):
-            self._tables[schema.table_name] = schema
-            class_fields = fields(schema)
-            for field in class_fields:
-                if field.name == "table_name":
-                    schema_ = make_schema(str(field.default), schema)
-                    await self._create_table(schema_, field.name)
+        if is_dataclass(class_obj):
+            await self._process_single_data_class(class_obj)
             return
 
         # tuple of dataclasses
-        if isinstance(schema, tuple):
-            print("is tup")
-            for class_obj in schema:
-                class_fields = fields(class_obj)
-                for field in class_fields:
-                    if field.name == "table_name":
-                        schema_ = make_schema(str(field.default), class_obj)
-                        await self._create_table(schema_, field.name)
+        if isinstance(class_obj, tuple):
+            for _obj in class_obj:
+                await self._process_single_data_class(_obj)
             return
 
     async def _table_exists(self, table_name: str) -> bool | None:
@@ -116,11 +147,10 @@ class Db:
 
         """
         if self._conn is not None:
-            query = f"SELECT name FROM sqlite_master WHERE type='table' AND name=?;"
+            query = "SELECT name FROM sqlite_master WHERE type='table' AND name=?;"
             cursor = await self._conn.execute(query, (table_name,))
             return await cursor.fetchone() is not None
-        else:
-            return None
+        return None
 
     async def _create_table(self, named_data: TableSchema, name: str) -> None:
         """
@@ -158,7 +188,7 @@ class Db:
                     await cursor.fetchall()
                 await self._conn.commit()
 
-    def insert(self, data_class: is_dataclass) -> Callable[..., None]:
+    def insert(self, data_class: Any) -> Callable[..., Coroutine[Any, Any, None]]:
         """
         Create a record and insert it into the specified table.
 
@@ -200,12 +230,13 @@ class Db:
             sql = f"INSERT INTO {data_class.table_name} ({columns_str}) VALUES ({placeholders});"
             await self._conn.execute(sql, insertion_vals)
             await self._conn.commit()
+            return None
 
         return _record
 
     def update(
-        self, data_class: is_dataclass, column_identifier: None | str = None
-    ) -> Callable[..., None]:
+        self, data_class: Any, column_identifier: None | str = None
+    ) -> Callable[..., Coroutine[Any, Any, None]]:
         """
         Create a record update operation for the specified table.
 
@@ -258,8 +289,8 @@ class Db:
         return _record
 
     def find(
-        self, data_class: is_dataclass, column_identifier: None | str = None
-    ) -> Callable[..., None]:
+        self, data_class: Any, column_identifier: None | str = None
+    ) -> Callable[..., Coroutine[Any, Any, None]]:
         """
         Create a record retrieval operation for the specified table.
 
@@ -310,8 +341,8 @@ class Db:
         return _record
 
     def delete(
-        self, data_class: is_dataclass, column_identifier: None | str = None
-    ) -> Callable[..., None]:
+        self, data_class: Any, column_identifier: None | str = None
+    ) -> Callable[..., Coroutine[Any, Any, None]]:
         """
         Create a record deletion operation for the specified table. This defaults to the primary key if
         the column_identifier is not provided.

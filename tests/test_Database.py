@@ -207,7 +207,7 @@ async def test_connect(db_path):
 
 
 @pytest.mark.asyncio
-async def test_connect(db_path):
+async def test_close(db_path):
     """
     Tests aiosqlite connection close
     """

@@ -1,25 +1,31 @@
 [tool.poetry]
-name = "aiodesa"
-version = "0.1.11"
-description = "AIODesa offers a straightforward and 100% Python interface for managing asynchronous data access. By leveraging Python's built-ins and standard library, it seamlessly wraps around AioSqlite, providing a hassle-free experience. With AIODesa, you can define, generate, and commit data effortlessly, thanks to shared objects for tables and records."
-authors = ["sockheadrps <r.p.skiles@gmail.com>"]
-readme = "README.md"
+    name = "aiodesa"
+    version = "0.1.11"
+    description = "AIODesa offers a straightforward and 100% Python interface for managing asynchronous data access. By leveraging Python's built-ins and standard library, it seamlessly wraps around AioSqlite, providing a hassle-free experience. With AIODesa, you can define, generate, and commit data effortlessly, thanks to shared objects for tables and records."
+    authors = ["sockheadrps <r.p.skiles@gmail.com>"]
+    readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
-aiosqlite = "^0.19.0"
-Sphinx = "^7.2.6"
-sphinx-rtd-theme = "^2.0.0"
-sphinxcontrib-napoleon = "^0.7"
-sphinx-autodoc-typehints = "^1.25.2"
+    python = "^3.10"
+    aiosqlite = "^0.19.0"
 
 [tool.poetry.dev-dependencies]
-pytest = "^7.0"
-pre-commit = "^3.5.0"
-mypy = "^1.7.1"
-pytest-asyncio = "^0.23.2"
+    pytest = "^7.0"
+    pre-commit = "^3.5.0"
+    mypy = "^1.7.1"
+    pytest-asyncio = "^0.23.2"
+    Sphinx = "^7.2.6"
+    sphinx-rtd-theme = "^2.0.0"
+    sphinxcontrib-napoleon = "^0.7"
+    sphinx-autodoc-typehints = "^1.25.2"
 
+[tool.poetry.group.dev.dependencies]
+    pylint = "^3.0.3"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+    requires = ["poetry-core"]
+    build-backend = "poetry.core.masonry.api"
+
+[tool.pylint.MASTER]
+    ignore-patterns = ['.*conf\.py', '^test_.*py']
+    disable = ['C0301']

@@ -1,12 +1,35 @@
+"""
+Database Schema Definitions
+
+Module provides classes and functions for defining database schema elements
+such as primary keys, unique keys, foreign keys, and table schema.
+
+Classes:
+    `ForeignKey`: Represents a foreign key relationship in a database.
+    `PrimaryKey`: Represents primary key columns in a database table.
+    `UniqueKey`: Represents unique key column in a table.
+    `TableSchema`: Represents the schema for a database table.
+
+Functions:
+    `set_key`: Decorator for setting primary keys, unique keys, and foreign
+    keys on a class.
+    `make_schema`: Generate a `TableSchema` based on the provided data class.
+
+Usage examples can be found in the docstrings of each class and function.
+
+Note:
+    This module is intended for use with data classes and provides a convenient
+    way to define database schema elements in Python code.
+"""
+
 from dataclasses import dataclass
 from typing import Any, NamedTuple
-from aiodesa.utils.types import py_to_sql_type
+from aiodesa.utils.util_types import py_to_sql_type
 
 
 class ForeignKey(NamedTuple):
     """
     Represents a foreign key relationship in a database.
-
     Args:
         key: The column name representing the foreign key.
         table: The name of the referenced table.
@@ -15,7 +38,6 @@ class ForeignKey(NamedTuple):
 
     .. code-block:: python
 
-        # Define a foreign key with the column name 'user_id' referencing the 'users' table:
         @set_key(ForeignKey(key='user_id', table='users'))
 
     Note:
@@ -71,10 +93,11 @@ class UniqueKey(NamedTuple):
 
 def set_key(*args: PrimaryKey | UniqueKey | ForeignKey | tuple[ForeignKey, ...]):
     """
-    Decorator for setting primary keys, unique keys, and foreign keys on a class.
+    Decorator for setting keys on a class.
 
     Args:
-        `*args`: The keys to be set. Can include PrimaryKey, UniqueKey, ForeignKey, or a tuple of ForeignKeys.
+        `*args`: The keys to be set. Can include PrimaryKey, UniqueKey,
+        ForeignKey, or a tuple of ForeignKeys.
 
     Returns:
         A decorator function to set keys on a class.
@@ -84,7 +107,9 @@ def set_key(*args: PrimaryKey | UniqueKey | ForeignKey | tuple[ForeignKey, ...])
     .. code-block:: python
 
         @dataclass
-        @set_key(PrimaryKey("username"), UniqueKey("id"), ForeignKey("username", "anothertable"))
+        @set_key(PrimaryKey(
+            "username"), UniqueKey("id"), ForeignKey("username", "anothertable"
+            ))
         class Users:
             username: str
             id: str | None = None
@@ -128,17 +153,19 @@ class TableSchema:
 
     Args:
         table_name: The name of the table.
-        data: The SQL data definition language (DDL) statement for creating the table.
+        data: The SQL data definition language (DDL) statement.
 
     Example:
 
     .. code-block:: python
 
         # Create a TableSchema for a 'users' table
-        user_table_schema = TableSchema(table_name='users', data='CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT);')
+        user_table_schema = TableSchema(
+            table_name='users',
+            data='CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT);')
 
     Note:
-        The `data` attribute contains the SQL data definition language (DDL) statement for creating the table.
+        The `data` attribute contains the SQL data definition language (DDL).
     """
 
     table_name: str
@@ -154,17 +181,18 @@ def make_schema(name: str, data_cls: Any) -> TableSchema:
         data_cls: A data class defining the schema for the table.
 
     Returns:
-        TableSchema: An instance of TableSchema containing the table_name and SQL data definition.
+        TableSchema: An instance of TableSchema containing the table_name and
+        SQL data definition.
 
     Example:
 
     .. code-block:: python
 
-        # Generate a TableSchema for a 'users' table based on the User data class
         user_table_schema = generate_table_schema(name='users', data_cls=User)
 
     Note:
-        The function returns a TableSchema instance containing the table_name and SQL data definition.
+        The function returns a TableSchema instance containing the table_name
+        and SQL data definition.
     """
     columns = []
     name = name.replace(" ", "_")

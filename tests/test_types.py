@@ -1,4 +1,4 @@
-from aiodesa.utils.types import SQLDataType, py_to_sql_type, IsDataclass
+from aiodesa.utils.util_types import SQLDataType, py_to_sql_type
 import pytest
 from dataclasses import dataclass
 
@@ -43,13 +43,3 @@ def test_py_to_sql_type():
 
     with pytest.raises(ValueError, match="Unsupported data type"):
         py_to_sql_type(complex(1, 2))
-
-
-def test_IsDataClass():
-    # Create a class and test it adheres to the IsDataclass protocol
-    @dataclass
-    class DataClassExample:
-        field1: int
-        field2: str
-
-    assert isinstance(DataClassExample, IsDataclass)

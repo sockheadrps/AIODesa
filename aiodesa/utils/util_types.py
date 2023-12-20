@@ -1,6 +1,43 @@
+"""
+SQL Data and Type Utilities
+
+This module provides utilities for working with SQL data types and defining data class protocols.
+
+Classes:
+    `SQLDataType`: Enumeration representing common SQL data types.
+    `IsDataclass`: Protocol indicating that a class is a data class.
+
+Functions:
+    `py_to_sql_type`: Determine the SQL type of a Python primitive.
+
+Usage Examples:
+
+    1. SQL Data Types Enumeration:
+        .. code-block:: python
+
+            sql_type = SQLDataType.VARCHAR
+
+    2. Determine SQL Type from Python Primitive:
+        .. code-block:: python
+
+            sql_type = py_to_sql_type("hello")
+            print(sql_type)  # Output: "VARCHAR"
+
+    3. Data Class Protocol:
+        .. code-block:: python
+
+        class MyDataClass(IsDataclass):
+            __dataclass_fields__: ClassVar[Dict]
+
+Note:
+    `SQLDataType` provides a convenient way to represent common SQL data types.
+    `py_to_sql_type` is used to determine the SQL type of a Python primitive.
+    `IsDataclass` is a protocol indicating that a class is a data class.
+
+"""
 from enum import Enum
 import builtins
-from typing import ClassVar, Dict, Protocol, Any, runtime_checkable
+from typing import Any
 from types import UnionType
 
 
@@ -71,15 +108,3 @@ def py_to_sql_type(data: Any) -> str:
         case _:
             raise ValueError(f"Unsupported data type: {type(data)}")
     return return_type
-
-
-@runtime_checkable
-class IsDataclass(Protocol):
-    """
-    Protocol indicating that a class is a data class.
-
-    Notes:
-        This is a way of crudely typing a dataclass
-    """
-
-    __dataclass_fields__: ClassVar[Dict]
