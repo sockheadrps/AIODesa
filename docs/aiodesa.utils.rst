@@ -15,7 +15,7 @@ aiodesa.utils.table module
 aiodesa.utils.types module
 --------------------------
 
-.. automodule:: aiodesa.utils.types
+.. automodule:: aiodesa.utils.util_types
    :members:
    :undoc-members:
    :show-inheritance:

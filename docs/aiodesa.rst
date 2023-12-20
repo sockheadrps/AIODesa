@@ -9,10 +9,10 @@ Subpackages
    aiodesa.utils
 
 
-aiodesa.Database module
+aiodesa.database module
 -----------------------
 
-.. automodule:: aiodesa.Database
+.. automodule:: aiodesa.database
    :members:
    :undoc-members:
    :show-inheritance:
