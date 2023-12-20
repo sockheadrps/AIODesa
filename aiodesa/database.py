@@ -9,6 +9,7 @@ Classes:
 Example:
 
 .. code-block:: python
+
 from aiodesa import Db
 
 class Users:
@@ -18,7 +19,6 @@ class Users:
 
 async with Db("database.sqlite3") as db:
     await db.read_table_schemas(Users)
-    ...
 """
 
 from dataclasses import is_dataclass, fields
