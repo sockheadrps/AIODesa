@@ -174,8 +174,13 @@ async def test_find(test_data_fixture, db_path):
     async with Db(db_path) as db:
         await db.read_table_schemas(test_data_fixture)
         find = db.find(test_data_fixture, column_identifier="test_column")
+        # Entry in table
         find_record = await find("test")
         assert find_record.test_column == "test"
+        # Entry not in table
+        find = db.find(test_data_fixture, column_identifier="test_column")
+        find_record = await find("no_result")
+        assert find_record == None
 
 
 @pytest.mark.asyncio

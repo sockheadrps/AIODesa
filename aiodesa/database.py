@@ -333,10 +333,11 @@ class Db:
             sql_args = (args[0],)
             async with self._conn.execute(sql, sql_args) as cursor:
                 results = await cursor.fetchall()
-            rows_fetched = results[0]
-            data_cls = data_class(*rows_fetched, *results[1:])
-
-            return data_cls
+            if len(results) > 0:
+                rows_fetched = results[0]
+                data_cls = data_class(*rows_fetched, *results[1:])
+                return data_cls
+            return None
 
         return _record
 
