@@ -81,9 +81,9 @@ class Db:
         Note:
             Provide any additional notes or considerations about the method.
         """
-        self._tables[schema.table_name] = schema
         # single dataclass
         if is_dataclass(schema):
+            self._tables[schema.table_name] = schema
             class_fields = fields(schema)
             for field in class_fields:
                 if field.name == "table_name":
@@ -93,6 +93,7 @@ class Db:
 
         # tuple of dataclasses
         if isinstance(schema, tuple):
+            print("is tup")
             for class_obj in schema:
                 class_fields = fields(class_obj)
                 for field in class_fields:
@@ -243,7 +244,7 @@ class Db:
                 set_clause = f"{column} = ?"
                 set_clauses_placeholders.append(set_clause)
             set_clause_string = ", ".join(set_clauses_placeholders)
-            values.append(data_cls.username)
+            values.extend(args)
             identifier = (
                 column_identifier
                 if column_identifier is not None
@@ -301,8 +302,8 @@ class Db:
             sql_args = (args[0],)
             async with self._conn.execute(sql, sql_args) as cursor:
                 results = await cursor.fetchall()
-            username_tuple = results[0]
-            data_cls = data_class(*username_tuple, *results[1:])
+            rows_fetched = results[0]
+            data_cls = data_class(*rows_fetched, *results[1:])
 
             return data_cls
 
@@ -402,6 +403,7 @@ class Db:
         """
         if self._conn is not None:
             await self._conn.close()
+            self._conn = None
 
     async def __aenter__(self) -> "Db":
         """
@@ -426,6 +428,7 @@ class Db:
         The returned `Db` instance represents the connection to the database.
         """
         await self._connect()
+        # await self._conn.execute("BEGIN")
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
