@@ -9,7 +9,7 @@
 
 ## Simplify Your Personal Projects with AIODesa
 
-### Are you tired of the hassle of setting up complex databases for small apllications and personal projects? Designed to streamline monotony, AIODesa makes managing asynchronous database access easy. Perfect for smaller-scale applications where extensive database operations are not a priority.
+### Are you tired of the hassle of setting up complex databases for small scale applications and personal projects? Designed to streamline monotony, AIODesa makes managing asynchronous database access easy. Perfect for smaller-scale applications where extensive database operations are not a priority.
 
 ### *No need to write even a single line of raw SQL.*
 
