@@ -23,7 +23,7 @@ AIODesa is specifically crafted for simpler projects where database IO is minima
 
 ### [Read the docs](https://sockheadrps.github.io/AIODesa/index.html)
 
-![AIODesa](https://github.com/sockheadrps/AIODesa/raw/main/AIODesaEx1.png?raw=true)
+![AIODesa](https://github.com/sockheadrps/AIODesa/raw/main/desa.png?raw=true)
 
 
 # Usage
@@ -35,7 +35,7 @@ pip install aiodesa
 
 Sample API usage:
 
-```
+```python
 from aiodesa import Db
 import asyncio
 from dataclasses import dataclass

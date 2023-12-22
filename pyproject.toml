@@ -29,3 +29,6 @@
 [tool.pylint.MASTER]
     ignore-patterns = ['.*conf\.py', '^test_.*py']
     disable = ['C0301']
+
+[tool.mypy]
+    ignore_missing_imports = true
