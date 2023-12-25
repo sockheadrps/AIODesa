@@ -38,8 +38,8 @@ repos:
     rev: 'v1.7.1'
     hooks:
       - id: mypy
-        args: ["--exclude", "examples"]
-        exclude: 'test_.*\.py$'
+        args: ["--exclude", "examples", "--exclude", "docs"]
+        exclude: 'test_.*\.py$ | conf.*\.py$'
 
   - repo: https://github.com/pycqa/flake8
     rev: '6.1.0'
