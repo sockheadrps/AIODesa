@@ -5,15 +5,21 @@ Module provides classes and functions for defining database schema elements
 such as primary keys, unique keys, foreign keys, and table schema.
 
 Classes:
-    `ForeignKey`: Represents a foreign key relationship in a database.
-    `PrimaryKey`: Represents primary key columns in a database table.
-    `UniqueKey`: Represents unique key column in a table.
-    `TableSchema`: Represents the schema for a database table.
+
+    - :class:`ForeignKey`: Represents a foreign key relationship in a database.
+    - :class:`PrimaryKey`: Represents primary key columns in a database table.
+    - :class:`UniqueKey`: Represents a unique key column in a table.
+    - :class:`TableSchema`: Represents the schema for a database table.
+
+
 
 Functions:
-    `set_key`: Decorator for setting primary keys, unique keys, and foreign
-    keys on a class.
-    `make_schema`: Generate a `TableSchema` based on the provided data class.
+
+    - :func:`set_key`: Decorator for setting primary keys, unique keys, and
+      foreign keys on a class.
+    - :func:`make_schema`: Generate a `TableSchema` based on the provided data
+      class.
+
 
 Usage examples can be found in the docstrings of each class and function.
 
@@ -123,11 +129,13 @@ def set_key(*args: PrimaryKey | UniqueKey | ForeignKey | tuple[ForeignKey, ...])
         for arg in args:
             if isinstance(arg, PrimaryKey):
                 if not hasattr(cls, "primary_key"):
-                    cls.primary_key: str = arg.column
+                    # cls.primary_key: str = arg.column
+                    setattr(cls, "primary_key", arg.column)
 
             elif isinstance(arg, UniqueKey):
                 if not hasattr(cls, "unique_key"):
-                    cls.unique_key: str = arg.column
+                    # cls.unique_key: str = arg.column
+                    setattr(cls, "unique_key", arg.column)
 
             elif isinstance(arg, tuple):
                 if not any(

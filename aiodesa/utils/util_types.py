@@ -1,14 +1,18 @@
 """
 SQL Data and Type Utilities
 
-This module provides utilities for working with SQL data types and defining data class protocols.
+This module provides utilities for working with SQL data types and defining
+data class protocols.
 
 Classes:
-    `SQLDataType`: Enumeration representing common SQL data types.
-    `IsDataclass`: Protocol indicating that a class is a data class.
+
+- `SQLDataType`: Enumeration representing common SQL data types.
+- `IsDataclass`: Protocol indicating that a class is a data class.
 
 Functions:
-    `py_to_sql_type`: Determine the SQL type of a Python primitive.
+
+- `py_to_sql_type`: Determine the SQL type of a Python primitive.
+
 
 Usage Examples:
 
@@ -101,7 +105,9 @@ def py_to_sql_type(data: Any) -> str:
             return_type = "FLOAT"
         case builtins.bool:
             return_type = "BOOLEAN"
-        case builtins.bytes | builtins.bytearray | builtins.list | builtins.tuple | builtins.set | builtins.dict:
+        case builtins.bytes | builtins.bytearray | builtins.list:
+            return_type = "TEXT"
+        case builtins.tuple | builtins.set | builtins.dict:
             return_type = "TEXT"
         case None:
             return_type = "NULL"

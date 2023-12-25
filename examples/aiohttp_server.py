@@ -77,7 +77,8 @@ async def find_handler(request):
         )
     else:
         return web.json_response(
-            {"code": "204", "message": "no content"}, content_type="application/json"
+            {"code": "204", "message": "no content"},
+            content_type="application/json",
         )
 
 
@@ -88,7 +89,8 @@ async def update_handler(request):
     if name is not None:
         await update_item_value(name, new_value)
         return web.json_response(
-            {"code": "200", "message": "Item updated"}, content_type="application/json"
+            {"code": "200", "message": "Item updated"},
+            content_type="application/json",
         )
     else:
         return web.json_response(
@@ -104,7 +106,8 @@ async def delete_handler(request):
     if name is not None:
         await delete_item(name)
         return web.json_response(
-            {"code": "200", "message": "Item deleted"}, content_type="application/json"
+            {"code": "200", "message": "Item deleted"},
+            content_type="application/json",
         )
     else:
         return web.json_response(

@@ -1,0 +1,15 @@
+Mypy Type Check Coverage Summary
+================================
+
+Script: index
+
++--------------------------+-------------------+---------+
+| Module                   | Imprecision       | Lines   |
++--------------------------+-------------------+---------+
+| aiodesa                  |   0.00% imprecise |   5 LOC |
+| aiodesa.database         |  14.62% imprecise | 513 LOC |
+| aiodesa.utils.table      |   8.60% imprecise | 221 LOC |
+| aiodesa.utils.util_types |   8.62% imprecise | 116 LOC |
++--------------------------+-------------------+---------+
+| Total                    |  12.16% imprecise | 855 LOC |
++--------------------------+-------------------+---------+

@@ -1,10 +1,12 @@
 """
 aiodesa.Database: Simple SQLite Database Interface
 
-This module provides the `Db` class, a simple SQLite database interface that supports asynchronous operations.
+This module provides the `Db` class, a simple SQLite database interface that
+supports asynchronous operations.
 
 Classes:
-    - Db: Represents a simple SQLite database interface.
+
+- :class:`Db`: Represents a simple SQLite database interface.
 
 Example:
 
@@ -67,8 +69,11 @@ class Db:
         Internal method to create the database file if it does not exist.
 
         Notes:
-        - This method is automatically called during the initialization of the Db class.
-        - It ensures that the SQLite database file is created at the specified path if it does not exist.
+        - This method is automatically called during the initialization of the
+        Db class.
+        - It ensures that the SQLite database file is created at the specified
+        path if
+        it does not exist.
         """
         if not self.db_path.exists():
             self.db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -87,7 +92,6 @@ class Db:
         if not is_dataclass(schema):
             raise ValueError("Provided schema is not a data class")
 
-        # Now, the type checker should be able to understand that schema is a DataclassInstance
         self._tables[schema.table_name] = schema
         class_fields = fields(schema)
         for field in class_fields:
@@ -135,7 +139,8 @@ class Db:
 
     async def _table_exists(self, table_name: str) -> bool | None:
         """
-        Create a table in the database based on the provided TableSchema instance.
+        Create a table in the database based on the provided
+        TableSchema instance.
 
         Args:
             table_name: The name of the table.
@@ -143,21 +148,25 @@ class Db:
         Returns:
             None
 
-        This method creates a table in the database with the specified name and schema.
+        This method creates a table in the database with the specified name
+        and schema.
 
         """
         if self._conn is not None:
-            query = "SELECT name FROM sqlite_master WHERE type='table' AND name=?;"
+            query = "SELECT name FROM sqlite_master \
+                  WHERE type='table' AND name=?;"
             cursor = await self._conn.execute(query, (table_name,))
             return await cursor.fetchone() is not None
         return None
 
     async def _create_table(self, named_data: TableSchema, name: str) -> None:
         """
-        Internal method to create a table in the database based on the provided TableSchema instance.
+        Internal method to create a table in the database based on the provided
+        TableSchema instance.
 
         Args:
-            named_data: The TableSchema instance containing the table_name and SQL data definition.
+            named_data: The TableSchema instance containing the table_name
+            and SQL data definition.
             name: The name of the table.
 
         Returns:
@@ -176,11 +185,13 @@ class Db:
             return
 
 
-        This method creates a table in the database with the specified name and schema.
+        This method creates a table in the database with the specified name
+        and schema.
 
         Note:
-        The `named_data` parameter should include the `table_name` property for the name of the table
-        and the `sql_definition` property for the SQL data definition of the table.
+        The `named_data` parameter should include the `table_name` property
+        for the name of the table and the `sql_definition` property for the
+        SQL data definition of the table.
         """
         if self._conn is not None:
             if not await self._table_exists(name):
@@ -227,7 +238,8 @@ class Db:
 
             columns_str = ", ".join(field_vals.keys())
             placeholders = ", ".join("?" for _ in insertion_vals)
-            sql = f"INSERT INTO {data_class.table_name} ({columns_str}) VALUES ({placeholders});"
+            sql = f"INSERT INTO {data_class.table_name} \
+                ({columns_str}) VALUES ({placeholders});"
             await self._conn.execute(sql, insertion_vals)
             await self._conn.commit()
             return None
@@ -263,7 +275,8 @@ class Db:
                 await update("john_doe")
 
         Note:
-        If the `column_identifier` is not provided, the primary key of the data class will be used as the identifier.
+        If the `column_identifier` is not provided, the primary key of the
+        data class will be used as the identifier.
         """
 
         async def _record(*args, **kwargs) -> None:
@@ -281,7 +294,8 @@ class Db:
                 if column_identifier is not None
                 else data_cls.primary_key
             )
-            sql = f"UPDATE {data_class.table_name} SET {set_clause_string} WHERE {identifier} = ?"
+            sql = f"UPDATE {data_class.table_name} SET \
+                {set_clause_string} WHERE {identifier} = ?"
 
             await self._conn.execute(sql, tuple(values))
             await self._conn.commit()
@@ -345,8 +359,9 @@ class Db:
         self, data_class: Any, column_identifier: None | str = None
     ) -> Callable[..., Coroutine[Any, Any, None]]:
         """
-        Create a record deletion operation for the specified table. This defaults to the primary key if
-        the column_identifier is not provided.
+        Create a record deletion operation for the specified table.
+        This defaults to the primary key ifthe column_identifier is
+        not provided.
 
         Args:
             data_class: The data class representing the table structure.
@@ -407,7 +422,8 @@ class Db:
             # The database connection is now established.
 
         Note:
-        This method initializes the connection to the SQLite database using the provided `db_path`.
+        This method initializes the connection to the SQLite database
+        using the provided `db_path`.
         """
         self._conn = await aiosqlite.connect(self.db_path)
 
@@ -453,11 +469,13 @@ class Db:
             async with YourDatabaseConnection() as connection:
                 # Your asynchronous code here
 
-        # Upon entering the context, the database connection is automatically established.
+        # Upon entering the context, the database connection is automatically
+        established.
 
         Note:
-        This method is intended for use with the `async with` statement in an asynchronous context manager.
-        The returned `Db` instance represents the connection to the database.
+        This method is intended for use with the `async with` statement in an
+        asynchronous context manager. The returned `Db` instance represents
+        the connection to the database.
         """
         await self._connect()
         # await self._conn.execute("BEGIN")
@@ -469,10 +487,12 @@ class Db:
 
         Automatically closes the database connection upon exiting the context.
 
-        Parameters:
-        - exc_type (Type): The type of the exception raised, if any.
-        - exc_value (Exception): The exception object, if an exception occurred. Otherwise, None.
-        - traceback (TracebackType): The traceback information related to the exception, if any.
+        Args:
+            exc_type (Type): The type of the exception raised, if any.
+            exc_value (Exception): The exception object, if an exception
+        occurred. Otherwise, None.
+            traceback (TracebackType): The traceback information related to
+            the exception, if any.
 
         Returns:
         None
@@ -483,9 +503,11 @@ class Db:
             async with YourDatabaseConnection() as connection:
                 # Your asynchronous code here
 
-        # Upon exiting the context, the database connection is automatically closed.
+        # Upon exiting the context, the database connection is
+        automatically closed.
 
         Note:
-        This method is intended for use with the `async with` statement in an asynchronous context manager.
+        This method is intended for use with the `async with` statement in an
+        asynchronous context manager.
         """
         await self._close()

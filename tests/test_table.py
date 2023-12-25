@@ -1,4 +1,10 @@
-from aiodesa.utils.table import ForeignKey, PrimaryKey, UniqueKey, set_key, make_schema
+from aiodesa.utils.table import (
+    ForeignKey,
+    PrimaryKey,
+    UniqueKey,
+    set_key,
+    make_schema,
+)
 from dataclasses import dataclass
 from uuid import uuid4
 
@@ -81,9 +87,7 @@ def test_set_key():
         table = TestTable(table_name)
         schema = make_schema(table_name, table)
         # Build the expected sql by hand....
-        expected_sql = (
-            f"CREATE TABLE IF NOT EXISTS test (\n{table.test_column_1} VARCHAR\n);"
-        )
+        expected_sql = f"CREATE TABLE IF NOT EXISTS test (\n{table.test_column_1} VARCHAR\n);"
 
         assert schema.table_name == table_name
         assert schema.data == expected_sql

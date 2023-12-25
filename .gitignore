@@ -4,6 +4,7 @@
 _run.py
 __pycache__/
 *.pyc
-package_upload.txt
+_commands.txt
 /dist
 _build/
+.coverage
