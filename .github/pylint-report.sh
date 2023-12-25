@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Run Pylint
-poetry install
 poetry run pylint aiodesa > .github/pylint_report.txt
 
 # Check the exit code of Pylint

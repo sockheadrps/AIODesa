@@ -1,6 +1,9 @@
 #!/bin/bash
 
 # Run pytest
+poetry install -v
+poetry add aiosqlite
+poetry shell
 poetry run pytest --cov-report term --cov=aiodesa
 result=$(poetry run coverage report)
 echo "$result"

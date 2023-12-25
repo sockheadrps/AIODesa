@@ -1,0 +1,3 @@
+[MASTER]
+ignored-modules=aiosqlite
+ignore = /docs, /tests

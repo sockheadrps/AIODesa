@@ -32,14 +32,13 @@ repos:
         language: system
         types: [python]
         require_serial: true
-        exclude: ^examples/
+        exclude: ^examples/|^docs/|^tests/
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: 'v1.7.1'
     hooks:
       - id: mypy
-        args: ["--exclude", "examples", "--exclude", "docs"]
-        exclude: 'test_.*\.py$ | conf.*\.py$'
+        exclude: ^tests/|examples|docs
 
   - repo: https://github.com/pycqa/flake8
     rev: '6.1.0'

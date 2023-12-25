@@ -43,8 +43,25 @@ jobs:
     - name: Run Tox
       run: |
         poetry run tox
+    
+
+    - name: Run pytest-report.sh
+      run: .github/pytest-report.sh
+    
+    - name: Run pylint-report.sh
+      run: .github/pylint-report.sh
+
+    - name: Run mypy-report.sh
+      run: .github/mypy-report.sh
+
+    - name: Run flake8-report.sh
+      run: .github/flake8-report.sh
+    
+    - name: Build doc-version Badges
+      run: .github/doc-version.sh
 
     - name: Build Readme Badges
       run: .github/readme-update.sh
+
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

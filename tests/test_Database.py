@@ -69,9 +69,7 @@ async def test_db_init(db_path):
 
 
 @pytest.mark.asyncio
-async def test_read_table_schemas_single_dataclass(
-    test_data_fixture, db_path, name
-):
+async def test_read_table_schemas_single_dataclass(test_data_fixture, db_path, name):
     """
     Tests creation of table from single data class
     """
@@ -133,9 +131,7 @@ async def test_create_table(test_data_fixture, db_path):
             await db._create_table(schema_, field.name)
 
     async with Db(db_path) as db:
-        query = (
-            f"SELECT name FROM sqlite_master WHERE type='table' AND name=?;"
-        )
+        query = f"SELECT name FROM sqlite_master WHERE type='table' AND name=?;"
         cursor = await db._conn.execute(query, (test_data_fixture.table_name,))
         assert await cursor.fetchone() is not None
 

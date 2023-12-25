@@ -8,7 +8,7 @@ if [ -f ".github/mypy/index.txt" ]; then
     # Check if precise_percentage is not empty
     if [ -n "$precise_percentage" ]; then
         # Update the badge in README.md with the calculated precise percentage
-        sed -i "s|!\[MyPy\].*|![MyPy](https://img.shields.io/badge/MyPy-type%20checked-$precise_percentage%25-brightgreen)|" README.md
+        sed -i "s|!\[MyPy\].*|![MyPy](https://img.shields.io/badge/MyPy-$precise_percentage%25-brightgreen)|" README.md
 
     else
         echo "Error: Unable to retrieve MyPy precise percentage from .github/mypy/index.txt."

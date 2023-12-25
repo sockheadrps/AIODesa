@@ -1,32 +1,34 @@
 # Asyncio Dead Easy Sql API
-
-![MyPy](https://img.shields.io/badge/MyPy-type%20checked-87.84%25-brightgreen)
+![MyPy](https://img.shields.io/badge/MyPy-87.84%25-brightgreen)
 ![Pytest](https://img.shields.io/badge/Pytest-96%25-brightgreen)
 ![Code Style](https://img.shields.io/badge/code%20style-black-000000)
 ![Pylint](https://img.shields.io/badge/Pylint-10/10-brightgreen)
 ![Flake8](https://img.shields.io/badge/Flake8-passed-brightgreen)
 ![Read the Docs](https://img.shields.io/badge/documentation-0.1.12-blue)
 
+
 ## Simplify Your Personal Projects with AIODesa
 
 ### Are you tired of the hassle of setting up complex databases for small scale applications and personal projects? Designed to streamline monotony, AIODesa makes managing asynchronous database access easy. Perfect for smaller-scale applications where extensive database operations are not a priority.
 
-### _No need to write even a single line of raw SQL._
+### *No need to write even a single line of raw SQL.*
 
 A straightforward and 100% Python interface for managing asynchronous database API's by leveraging Python's built-ins and standard library. It wraps around AioSqlite, providing a hassle-free experience to define, generate, and commit data effortlessly, thanks to shared objects for tables and records.
+
 
 ### Ideal for Personal Projects
 
 AIODesa is specifically crafted for simpler projects where database IO is minimal. It's not intended for heavy production use but rather serves as an excellent choice for personal projects that require SQL structured data persistence without the complexity of a full-scale database setup. SQLite is leveraged here, meaning youre free to use other SQLite drivers to consume and transform the data if your project outgrows AIODesa.
 
+
 ### [Read the docs](https://sockheadrps.github.io/AIODesa/index.html)
 
 ![AIODesa](https://github.com/sockheadrps/AIODesa/raw/main/desa.png?raw=true)
 
+
 # Usage
 
-**Install via pip**
-
+__Install via pip__
 ```
 pip install aiodesa
 ```
@@ -64,7 +66,7 @@ async def main():
 		# Update a record
 		record = db.update(UserEcon, column_identifier="username")
 		await record('sockheadrps', points=2330, id="1234")
-
+		
 
 asyncio.run(main())
 
