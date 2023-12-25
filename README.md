@@ -1,5 +1,5 @@
 # Asyncio Dead Easy Sql API
-![MyPy](https://img.shields.io/badge/MyPy-87.85%25-brightgreen)
+![MyPy](https://img.shields.io/badge/MyPy-87.84%25-brightgreen)
 ![Pytest](https://img.shields.io/badge/Pytest-96%25-brightgreen)
 ![Code Style](https://img.shields.io/badge/code%20style-black-000000)
 ![Pylint](https://img.shields.io/badge/Pylint-10/10-brightgreen)
