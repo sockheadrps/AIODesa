@@ -1,10 +1,10 @@
 # Asyncio Dead Easy Sql API
-![MyPy](https://img.shields.io/badge/MyPy-87.78%25-brightgreen)
+![MyPy](https://img.shields.io/badge/MyPy-88.78%25-brightgreen)
 ![Pytest](https://img.shields.io/badge/Pytest-96%25-brightgreen)
 ![Code Style](https://img.shields.io/badge/code%20style-black-000000)
 ![Pylint](https://img.shields.io/badge/Pylint-10/10-brightgreen)
 ![Flake8](https://img.shields.io/badge/Flake8-passed-brightgreen)
-![Read the Docs](https://img.shields.io/badge/documentation-latest-blue)
+![Read the Docs](https://img.shields.io/badge/documentation-0.1.12-blue)
 
 
 ## Simplify Your Personal Projects with AIODesa
@@ -60,11 +60,11 @@ async def main():
 		await db.read_table_schemas(UserEcon)
 
 		# Insert a record
-		record = db.insert(UserEcon.table_name)
+		record = db.insert(UserEcon)
 		await record('sockheadrps', id="fffff")
 
 		# Update a record
-		record = db.update(UserEcon.table_name, column_identifier="username")
+		record = db.update(UserEcon, column_identifier="username")
 		await record('sockheadrps', points=2330, id="1234")
 		
 

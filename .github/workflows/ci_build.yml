@@ -45,11 +45,6 @@ jobs:
         poetry run tox
 
     - name: Build Readme Badges
-      run: |
-        git config user.name "GitHub Actions"
-        git config user.email "actions@github.com"
-        git add README.md
-        git commit -m "Update README with GitHub Actions"
-        git push
+      run: .github/readme-update.sh
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

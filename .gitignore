@@ -8,3 +8,4 @@ _commands.txt
 /dist
 _build/
 .coverage
+pylint_report.txt
