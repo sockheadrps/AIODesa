@@ -1,10 +1,11 @@
 # Asyncio Dead Easy Sql API
 ![MyPy](https://img.shields.io/badge/MyPy-87.85%25-brightgreen)
-![Pytest](https://img.shields.io/badge/Pytest-96%25-brightgreen)
-![Code Style](https://img.shields.io/badge/code%20style-black-000000)
+![Pytest](https://img.shields.io/badge/Pytest-%25-brightgreen)
+![Code Style](https://img.shields.io/badge/Code%20Style-Black-000000)
 ![Pylint](https://img.shields.io/badge/Pylint-10/10-brightgreen)
 ![Flake8](https://img.shields.io/badge/Flake8-passed-brightgreen)
-![Read the Docs](https://img.shields.io/badge/documentation-0.1.12-blue)
+![Read The Docs](https://img.shields.io/badge/Documentation-0.1.12-blue)
+![Changie Logs](https://img.shields.io/badge/Changie_logs-0.1.12-blue)
 
 
 ## Simplify Your Personal Projects with AIODesa

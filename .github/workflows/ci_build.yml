@@ -57,11 +57,13 @@ jobs:
     - name: Run flake8-report.sh
       run: .github/flake8-report.sh
     
-    - name: Build doc-version Badges
-      run: .github/doc-version.sh
+    - name: Build Version Badges
+      run: .github/versioning.sh
 
     - name: Build Readme Badges
       run: .github/readme-update.sh
+    
+
 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
