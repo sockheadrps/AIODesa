@@ -1,7 +1,13 @@
 # Asyncio Dead Easy Sql API
+<<<<<<< HEAD
 ![MyPy](https://img.shields.io/badge/MyPy-87.85%25-brightgreen)
 ![Pytest](https://img.shields.io/badge/Pytest-%25-brightgreen)
 ![Code Style](https://img.shields.io/badge/Code%20Style-Black-000000)
+=======
+![MyPy](https://img.shields.io/badge/MyPy-87.84%25-brightgreen)
+![Pytest](https://img.shields.io/badge/Pytest-96%25-brightgreen)
+![Code Style](https://img.shields.io/badge/code%20style-black-000000)
+>>>>>>> f8acb51d6eaad98d177de4e02e08b54f90b7e4ad
 ![Pylint](https://img.shields.io/badge/Pylint-10/10-brightgreen)
 ![Flake8](https://img.shields.io/badge/Flake8-passed-brightgreen)
 ![Read The Docs](https://img.shields.io/badge/Documentation-0.1.12-blue)
