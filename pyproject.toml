@@ -1,6 +1,6 @@
 [tool.poetry]
     name = "aiodesa"
-    version = "0.1.12"
+    version = "0.2.0"
     description = "AIODesa offers a straightforward and 100% Python interface for managing asynchronous data access. By leveraging Python's built-ins and standard library, it seamlessly wraps around AioSqlite, providing a hassle-free experience. With AIODesa, you can define, generate, and commit data effortlessly, thanks to shared objects for tables and records."
     authors = ["sockheadrps <r.p.skiles@gmail.com>"]
     readme = "README.md"
@@ -9,7 +9,7 @@
     python = "^3.11"
     aiohttp = "^3.9.1"
     pre-commit = "^3.6.0"
-aiosqlite = "^0.19.0"
+    aiosqlite = "^0.19.0"
 
 [tool.poetry.dev-dependencies]
     pytest = "^7.0"
