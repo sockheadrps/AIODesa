@@ -355,6 +355,45 @@ class Db:
 
         return _record
 
+    def find_all(self, data_class: Any) -> Callable[..., Coroutine[Any, Any, list]]:
+        """
+        Create record retrieval operation to fetch all records from the specified table.
+
+        Args:
+            data_class: The data class representing the table structure.
+
+        Returns:
+            A function to be called with optional additional query parameters.
+
+        Example:
+
+        .. code-block:: python
+
+            class Users:
+                    username: str
+                    id: str | None = None
+                    table_name: str = "users"
+
+            async with Db("database.sqlite3") as db:
+                await db.read_table_schemas(Users)
+                ...
+                find_all_users = db.find_all(Users)
+                all_users = await find_all_users()
+
+        """
+
+        async def _records() -> list:
+            sql = f"SELECT * FROM {data_class.table_name}"
+            async with self._conn.execute(sql) as cursor:
+                results = await cursor.fetchall()
+                records = []
+                for row in results:
+                    record = data_class(*row)
+                    records.append(record)
+                return records
+
+        return _records
+
     def delete(
         self, data_class: Any, column_identifier: None | str = None
     ) -> Callable[..., Coroutine[Any, Any, None]]:
