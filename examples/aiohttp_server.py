@@ -23,7 +23,11 @@ class Users:
 async def create_table():
     async with Db("database.sqlite3") as db:
         await db.read_table_schemas(Users)
-    return db
+        # Insert initial records
+        insert_record = db.insert(Users)
+        await insert_record("Alice", value=100)
+        await insert_record("Bob", value=200)
+        await insert_record("Charlie", value=300)
 
 
 async def create_item(user_name, value):
@@ -42,6 +46,14 @@ async def find(name):
             return person
         else:
             return False
+
+
+async def find_all():
+    async with Db("database.sqlite3") as db:
+        await db.read_table_schemas(Users)
+        find_all = db.find_all(Users)
+        all_users = await find_all()
+        return all_users
 
 
 async def update_item_value(user_name, new_value):
@@ -80,6 +92,28 @@ async def find_handler(request):
             {"code": "204", "message": "no content"},
             content_type="application/json",
         )
+
+
+async def find_all_handler(request):
+    async with Db("database.sqlite3") as db:
+        await db.read_table_schemas(Users)
+        find_all_users = db.find_all(Users)
+        all_users = await find_all_users()
+        print(all_users)
+
+        if all_users:
+            users_data = [
+                {"name": user.name, "value": user.value} for user in all_users
+            ]
+            return web.json_response(
+                {"code": "200", "message": "OK", "data": users_data},
+                content_type="application/json",
+            )
+        else:
+            return web.json_response(
+                {"code": "204", "message": "no content"},
+                content_type="application/json",
+            )
 
 
 async def update_handler(request):
@@ -124,6 +158,7 @@ async def main():
     app.router.add_get("/find", find_handler)
     app.router.add_post("/update", update_handler)
     app.router.add_post("/delete", delete_handler)
+    app.router.add_get("/find_all", find_all_handler)
 
     # Set up the web server
     runner = web.AppRunner(app)
