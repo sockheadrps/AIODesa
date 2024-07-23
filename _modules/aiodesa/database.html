@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aiodesa.database &mdash; AioDesa 0.1.9 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=8618f531"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            AioDesa
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">aiodesa</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">AioDesa</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aiodesa.database</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aiodesa.database</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">aiodesa.Database: Simple SQLite Database Interface</span>
+
+<span class="sd">This module provides the `Db` class, a simple SQLite database interface that</span>
+<span class="sd">supports asynchronous operations.</span>
+
+<span class="sd">Classes:</span>
+
+<span class="sd">- :class:`Db`: Represents a simple SQLite database interface.</span>
+
+<span class="sd">Example:</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">    from aiodesa import Db</span>
+
+<span class="sd">    class Users:</span>
+<span class="sd">        username: str</span>
+<span class="sd">        id: str | None = None</span>
+<span class="sd">        table_name: str = &quot;users&quot;</span>
+
+<span class="sd">    async with Db(&quot;database.sqlite3&quot;) as db:</span>
+<span class="sd">        await db.read_table_schemas(Users)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">is_dataclass</span><span class="p">,</span> <span class="n">fields</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Coroutine</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">aiosqlite</span>
+<span class="kn">from</span> <span class="nn">aiodesa.utils.table</span> <span class="kn">import</span> <span class="n">make_schema</span><span class="p">,</span> <span class="n">TableSchema</span>
+
+
+<div class="viewcode-block" id="Db">
+<a class="viewcode-back" href="../../aiodesa.html#aiodesa.database.Db">[docs]</a>
+<span class="k">class</span> <span class="nc">Db</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a simple SQLite database interface.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        db_path : str</span>
+<span class="sd">                        The path to the SQLite database file.</span>
+
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        class Users:</span>
+<span class="sd">                username: str</span>
+<span class="sd">                id: str | None = None</span>
+<span class="sd">                table_name: str = &quot;users&quot;</span>
+
+<span class="sd">        async with Db(&quot;database.sqlite3&quot;) as db:</span>
+<span class="sd">            await db.read_table_schemas(Users)</span>
+<span class="sd">            ...</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_tables</span><span class="p">:</span> <span class="nb">dict</span>
+    <span class="n">db_path</span><span class="p">:</span> <span class="n">Path</span>
+    <span class="n">_conn</span><span class="p">:</span> <span class="n">Any</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">db_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_db</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tables</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">_create_db</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Internal method to create the database file if it does not exist.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">        - This method is automatically called during the initialization of the</span>
+<span class="sd">        Db class.</span>
+<span class="sd">        - It ensures that the SQLite database file is created at the specified</span>
+<span class="sd">        path if</span>
+<span class="sd">        it does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db_path</span><span class="o">.</span><span class="n">touch</span><span class="p">()</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_process_single_data_class</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schema</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process a single data class schema.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            schema: The data class schema representing a table.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            This method does not return any value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_dataclass</span><span class="p">(</span><span class="n">schema</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Provided schema is not a data class&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tables</span><span class="p">[</span><span class="n">schema</span><span class="o">.</span><span class="n">table_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">schema</span>
+        <span class="n">class_fields</span> <span class="o">=</span> <span class="n">fields</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">class_fields</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">field</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;table_name&quot;</span><span class="p">:</span>
+                <span class="n">schema_</span> <span class="o">=</span> <span class="n">make_schema</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">default</span><span class="p">),</span> <span class="n">schema</span><span class="p">)</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_table</span><span class="p">(</span><span class="n">schema_</span><span class="p">,</span> <span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Db.read_table_schemas">
+<a class="viewcode-back" href="../../aiodesa.html#aiodesa.database.Db.read_table_schemas">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">read_table_schemas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">class_obj</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read table schemas and create tables in the database.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            schema:</span>
+<span class="sd">                The schema or tuple of schemas to be processed. Each schema</span>
+<span class="sd">                should be a data class representing a table.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            This method does not return any value.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            class Users:</span>
+<span class="sd">                    username: str</span>
+<span class="sd">                    id: str | None = None</span>
+<span class="sd">                    table_name: str = &quot;users&quot;</span>
+
+<span class="sd">            async with Db(&quot;database.sqlite3&quot;) as db:</span>
+<span class="sd">                        await db.read_table_schemas(Users)</span>
+<span class="sd">                ...</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            Provide any additional notes or considerations about the method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># single dataclass</span>
+        <span class="k">if</span> <span class="n">is_dataclass</span><span class="p">(</span><span class="n">class_obj</span><span class="p">):</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_single_data_class</span><span class="p">(</span><span class="n">class_obj</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="c1"># tuple of dataclasses</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">class_obj</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">_obj</span> <span class="ow">in</span> <span class="n">class_obj</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_single_data_class</span><span class="p">(</span><span class="n">_obj</span><span class="p">)</span>
+            <span class="k">return</span></div>
+
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_table_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a table in the database based on the provided</span>
+<span class="sd">        TableSchema instance.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            table_name: The name of the table.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+
+<span class="sd">        This method creates a table in the database with the specified name</span>
+<span class="sd">        and schema.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;SELECT name FROM sqlite_master </span><span class="se">\</span>
+<span class="s2">                  WHERE type=&#39;table&#39; AND name=?;&quot;</span>
+            <span class="n">cursor</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="p">(</span><span class="n">table_name</span><span class="p">,))</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_create_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">named_data</span><span class="p">:</span> <span class="n">TableSchema</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Internal method to create a table in the database based on the provided</span>
+<span class="sd">        TableSchema instance.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            named_data: The TableSchema instance containing the table_name</span>
+<span class="sd">            and SQL data definition.</span>
+<span class="sd">            name: The name of the table.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            if is_dataclass(schema):</span>
+<span class="sd">            class_fields = fields(schema)</span>
+<span class="sd">            for field in class_fields:</span>
+<span class="sd">                if field.name == &quot;table_name&quot;:</span>
+<span class="sd">                    schema_ = make_schema(str(field.default), schema)</span>
+<span class="sd">                    await self._create_table(schema_, field.name)</span>
+<span class="sd">            return</span>
+
+
+<span class="sd">        This method creates a table in the database with the specified name</span>
+<span class="sd">        and schema.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">        The `named_data` parameter should include the `table_name` property</span>
+<span class="sd">        for the name of the table and the `sql_definition` property for the</span>
+<span class="sd">        SQL data definition of the table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_table_exists</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+                <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">executescript</span><span class="p">(</span><span class="n">named_data</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="k">as</span> <span class="n">cursor</span><span class="p">:</span>
+                    <span class="k">await</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Db.insert">
+<a class="viewcode-back" href="../../aiodesa.html#aiodesa.database.Db.insert">[docs]</a>
+    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_class</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Coroutine</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a record and insert it into the specified table.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_class: The data class representing the table structure.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A function to be called with the record data.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            class Users:</span>
+<span class="sd">                    username: str</span>
+<span class="sd">                    id: str | None = None</span>
+<span class="sd">                    table_name: str = &quot;users&quot;</span>
+
+<span class="sd">            async with Db(&quot;database.sqlite3&quot;) as db:</span>
+<span class="sd">                        await db.read_table_schemas(Users)</span>
+<span class="sd">                ...</span>
+<span class="sd">                insert = db.update(UserEcon)</span>
+<span class="sd">                await insert(&quot;john_doe&quot;)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">async</span> <span class="k">def</span> <span class="nf">_record</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data_cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tables</span><span class="p">[</span><span class="n">data_class</span><span class="o">.</span><span class="n">table_name</span><span class="p">](</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">field_vals</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">(</span><span class="n">data_cls</span><span class="p">):</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data_cls</span><span class="p">,</span> <span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">!=</span> <span class="n">data_cls</span><span class="o">.</span><span class="n">table_name</span><span class="p">:</span>
+                    <span class="n">field_vals</span><span class="p">[</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+            <span class="n">insertion_vals</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">field_vals</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+            <span class="n">columns_str</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">field_vals</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">placeholders</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">insertion_vals</span><span class="p">)</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;INSERT INTO </span><span class="si">{</span><span class="n">data_class</span><span class="o">.</span><span class="n">table_name</span><span class="si">}</span><span class="s2"> </span><span class="se">\</span>
+<span class="s2">                (</span><span class="si">{</span><span class="n">columns_str</span><span class="si">}</span><span class="s2">) VALUES (</span><span class="si">{</span><span class="n">placeholders</span><span class="si">}</span><span class="s2">);&quot;</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">insertion_vals</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">_record</span></div>
+
+
+<div class="viewcode-block" id="Db.update">
+<a class="viewcode-back" href="../../aiodesa.html#aiodesa.database.Db.update">[docs]</a>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">data_class</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">column_identifier</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Coroutine</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a record update operation for the specified table.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_class: The data class representing the table structure.</span>
+<span class="sd">            column_identifier: The column to use for identifying records.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A function to be called with the record data for updating.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            class Users:</span>
+<span class="sd">                    username: str</span>
+<span class="sd">                    id: str | None = None</span>
+<span class="sd">                    table_name: str = &quot;users&quot;</span>
+
+<span class="sd">            async with Db(&quot;database.sqlite3&quot;) as db:</span>
+<span class="sd">                await db.read_table_schemas(Users)</span>
+<span class="sd">                ...</span>
+<span class="sd">                update = db.update(UserEcon)</span>
+<span class="sd">                await update(&quot;john_doe&quot;)</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">        If the `column_identifier` is not provided, the primary key of the</span>
+<span class="sd">        data class will be used as the identifier.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">async</span> <span class="k">def</span> <span class="nf">_record</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data_cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tables</span><span class="p">[</span><span class="n">data_class</span><span class="o">.</span><span class="n">table_name</span><span class="p">](</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">set_clauses_placeholders</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">column</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">set_clause</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s2"> = ?&quot;</span>
+                <span class="n">set_clauses_placeholders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">set_clause</span><span class="p">)</span>
+            <span class="n">set_clause_string</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">set_clauses_placeholders</span><span class="p">)</span>
+            <span class="n">values</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+            <span class="n">identifier</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">column_identifier</span>
+                <span class="k">if</span> <span class="n">column_identifier</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="n">data_cls</span><span class="o">.</span><span class="n">primary_key</span>
+            <span class="p">)</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;UPDATE </span><span class="si">{</span><span class="n">data_class</span><span class="o">.</span><span class="n">table_name</span><span class="si">}</span><span class="s2"> SET </span><span class="se">\</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">set_clause_string</span><span class="si">}</span><span class="s2"> WHERE </span><span class="si">{</span><span class="n">identifier</span><span class="si">}</span><span class="s2"> = ?&quot;</span>
+
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">_record</span></div>
+
+
+<div class="viewcode-block" id="Db.find">
+<a class="viewcode-back" href="../../aiodesa.html#aiodesa.database.Db.find">[docs]</a>
+    <span class="k">def</span> <span class="nf">find</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">data_class</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">column_identifier</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Coroutine</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a record retrieval operation for the specified table.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_class: The data class representing the table structure.</span>
+<span class="sd">            column_identifier: The column to use for identifying records.</span>
+<span class="sd">        Defaults to the primary key of the data class if not specified.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A function to be called with the identifier for record retrieval.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            class MyBestFriends:</span>
+<span class="sd">                    username: str</span>
+<span class="sd">                    id: str | None = None</span>
+<span class="sd">                    table_name: str = &quot;users&quot;</span>
+
+<span class="sd">            async with Db(&quot;database.sqlite3&quot;) as db:</span>
+<span class="sd">                        await db.read_table_schemas(MyBestFriends)</span>
+
+<span class="sd">                ...</span>
+
+<span class="sd">                find_jimmy = db.find(MyBestFriends)</span>
+<span class="sd">                jimmy = await find_jimmy(&quot;jimmy&quot;)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">async</span> <span class="k">def</span> <span class="nf">_record</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data_cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tables</span><span class="p">[</span><span class="n">data_class</span><span class="o">.</span><span class="n">table_name</span><span class="p">](</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">identifier</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">column_identifier</span>
+                <span class="k">if</span> <span class="n">column_identifier</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="n">data_cls</span><span class="o">.</span><span class="n">primary_key</span>
+            <span class="p">)</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;SELECT * FROM </span><span class="si">{</span><span class="n">data_cls</span><span class="o">.</span><span class="n">table_name</span><span class="si">}</span><span class="s2"> WHERE </span><span class="si">{</span><span class="n">identifier</span><span class="si">}</span><span class="s2"> = ?&quot;</span>
+            <span class="n">sql_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],)</span>
+            <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">sql_args</span><span class="p">)</span> <span class="k">as</span> <span class="n">cursor</span><span class="p">:</span>
+                <span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">rows_fetched</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">data_cls</span> <span class="o">=</span> <span class="n">data_class</span><span class="p">(</span><span class="o">*</span><span class="n">rows_fetched</span><span class="p">,</span> <span class="o">*</span><span class="n">results</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+                <span class="k">return</span> <span class="n">data_cls</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">_record</span></div>
+
+
+<div class="viewcode-block" id="Db.find_all">
+<a class="viewcode-back" href="../../aiodesa.html#aiodesa.database.Db.find_all">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_class</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Coroutine</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="nb">list</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create record retrieval operation to fetch all records from the specified table.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_class: The data class representing the table structure.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A function to be called with optional additional query parameters.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            class Users:</span>
+<span class="sd">                    username: str</span>
+<span class="sd">                    id: str | None = None</span>
+<span class="sd">                    table_name: str = &quot;users&quot;</span>
+
+<span class="sd">            async with Db(&quot;database.sqlite3&quot;) as db:</span>
+<span class="sd">                await db.read_table_schemas(Users)</span>
+<span class="sd">                ...</span>
+<span class="sd">                find_all_users = db.find_all(Users)</span>
+<span class="sd">                all_users = await find_all_users()</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">async</span> <span class="k">def</span> <span class="nf">_records</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;SELECT * FROM </span><span class="si">{</span><span class="n">data_class</span><span class="o">.</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span> <span class="k">as</span> <span class="n">cursor</span><span class="p">:</span>
+                <span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+                <span class="n">records</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+                    <span class="n">record</span> <span class="o">=</span> <span class="n">data_class</span><span class="p">(</span><span class="o">*</span><span class="n">row</span><span class="p">)</span>
+                    <span class="n">records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">records</span>
+
+        <span class="k">return</span> <span class="n">_records</span></div>
+
+
+<div class="viewcode-block" id="Db.delete">
+<a class="viewcode-back" href="../../aiodesa.html#aiodesa.database.Db.delete">[docs]</a>
+    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">data_class</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">column_identifier</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Coroutine</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a record deletion operation for the specified table.</span>
+<span class="sd">        This defaults to the primary key ifthe column_identifier is</span>
+<span class="sd">        not provided.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_class: The data class representing the table structure.</span>
+<span class="sd">            column_identifier: The column to use for identifying records.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A function to be called with the identifier for record deletion.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            class Users:</span>
+<span class="sd">                    username: str</span>
+<span class="sd">                    id: str | None = None</span>
+<span class="sd">                    table_name: str = &quot;users&quot;</span>
+
+<span class="sd">            async with Db(&quot;database.sqlite3&quot;) as db:</span>
+<span class="sd">                        await db.read_table_schemas(Users)</span>
+
+<span class="sd">                ...</span>
+
+<span class="sd">                delete = db.delete(UserEcon)</span>
+<span class="sd">                await delete(&quot;john_doe&quot;)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">async</span> <span class="k">def</span> <span class="nf">_record</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data_cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tables</span><span class="p">[</span><span class="n">data_class</span><span class="o">.</span><span class="n">table_name</span><span class="p">](</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">identifier</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">column_identifier</span>
+                <span class="k">if</span> <span class="n">column_identifier</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="n">data_cls</span><span class="o">.</span><span class="n">primary_key</span>
+            <span class="p">)</span>
+
+            <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;DELETE FROM </span><span class="si">{</span><span class="n">data_cls</span><span class="o">.</span><span class="n">table_name</span><span class="si">}</span><span class="s2"> WHERE </span><span class="si">{</span><span class="n">identifier</span><span class="si">}</span><span class="s2"> = ?&quot;</span>
+            <span class="n">sql_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],)</span>
+
+            <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">sql_args</span><span class="p">)</span> <span class="k">as</span> <span class="n">cursor</span><span class="p">:</span>
+                <span class="k">await</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">_record</span></div>
+
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Establish a connection to the SQLite database.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            connection = YourDatabaseConnection()</span>
+<span class="sd">            await connection.connect()</span>
+<span class="sd">            # The database connection is now established.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">        This method initializes the connection to the SQLite database</span>
+<span class="sd">        using the provided `db_path`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="k">await</span> <span class="n">aiosqlite</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db_path</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Close the connection to the SQLite database.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            connection = YourDatabaseConnection()</span>
+<span class="sd">            await connection.connect()</span>
+
+<span class="sd">            # Your database operations here</span>
+
+<span class="sd">            await connection.close()</span>
+<span class="sd">            # The database connection is now closed.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">        This method closes the connection to the SQLite database if it is open.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="fm">__aenter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Db&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Asynchronous context manager entry point.</span>
+
+<span class="sd">        Automatically connects to the database upon entering the context.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        Db:</span>
+<span class="sd">            The Db instance with an active database connection.</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            async with YourDatabaseConnection() as connection:</span>
+<span class="sd">                # Your asynchronous code here</span>
+
+<span class="sd">        # Upon entering the context, the database connection is automatically</span>
+<span class="sd">        established.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">        This method is intended for use with the `async with` statement in an</span>
+<span class="sd">        asynchronous context manager. The returned `Db` instance represents</span>
+<span class="sd">        the connection to the database.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connect</span><span class="p">()</span>
+        <span class="c1"># await self._conn.execute(&quot;BEGIN&quot;)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="fm">__aexit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Asynchronous context manager exit point.</span>
+
+<span class="sd">        Automatically closes the database connection upon exiting the context.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            exc_type (Type): The type of the exception raised, if any.</span>
+<span class="sd">            exc_value (Exception): The exception object, if an exception</span>
+<span class="sd">        occurred. Otherwise, None.</span>
+<span class="sd">            traceback (TracebackType): The traceback information related to</span>
+<span class="sd">            the exception, if any.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            async with YourDatabaseConnection() as connection:</span>
+<span class="sd">                # Your asynchronous code here</span>
+
+<span class="sd">        # Upon exiting the context, the database connection is</span>
+<span class="sd">        automatically closed.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">        This method is intended for use with the `async with` statement in an</span>
+<span class="sd">        asynchronous context manager.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_close</span><span class="p">()</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, sockheadrps.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
