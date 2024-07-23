@@ -184,6 +184,25 @@ async def test_find(test_data_fixture, db_path):
 
 
 @pytest.mark.asyncio
+async def test_find_all(test_data_fixture, db_path):
+    """
+    Test the find_all method of Db class.
+    """
+    async with Db(db_path) as db:
+        await db.read_table_schemas(test_data_fixture)
+
+        find_all_records = db.find_all(test_data_fixture)
+        all_records = await find_all_records()
+
+        # Perform assertions based on your test data
+        assert len(all_records) > 0  # Ensure some records are fetched
+
+        for record in all_records:
+            # Assert that each record is of the correct data class type
+            assert isinstance(record, test_data_fixture)
+
+
+@pytest.mark.asyncio
 async def test_delete(test_data_fixture, db_path, name):
     """
     Test the find method of DB class. Test is done with raw sql, not by testing against
