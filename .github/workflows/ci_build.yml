@@ -43,7 +43,7 @@ jobs:
     - name: Run Tox
       run: |
         poetry run tox
-        continue-on-error: true
+      continue-on-error: true
     
 
     - name: Run pytest-report.sh
