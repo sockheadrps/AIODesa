@@ -68,6 +68,11 @@ async def main():
 		record = db.update(UserEcon, column_identifier="username")
 		await record('sockheadrps', points=2330, id="1234")
 		
+		# Find All in a table
+		find_all_users = db.find_all(UserEcon)
+		all_users = await find_all_users()
+		for user in all_users:
+			print(user.username)
 
 asyncio.run(main())
 
